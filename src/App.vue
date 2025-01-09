@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import OpenAI from "openai";
+import { marked } from 'marked';
 
 const inputText = ref("");
 const deepseekResponse = ref("");
@@ -38,6 +39,10 @@ async function getDeepseekExplanation() {
     isLoading.value = false;
   }
 }
+
+const formattedResponse = computed(() => {
+  return marked(deepseekResponse.value);
+});
 </script>
 
 <template>
@@ -77,9 +82,7 @@ async function getDeepseekExplanation() {
           <span>DeepSeek 解释</span>
           <span class="arrow">{{ isLoading ? '...' : '▼' }}</span>
         </div>
-        <div v-if="deepseekResponse" class="option-content">
-          {{ deepseekResponse }}
-        </div>
+        <div v-if="deepseekResponse" class="option-content" v-html="formattedResponse"></div>
       </div>
     </div>
   </main>
@@ -135,8 +138,58 @@ async function getDeepseekExplanation() {
 
 .option-content {
   padding: 15px;
-  white-space: pre-wrap;
   line-height: 1.5;
+}
+
+/* 添加 markdown 样式 */
+:deep(.option-content) {
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+  }
+  
+  p {
+    margin: 0.5em 0;
+  }
+  
+  code {
+    background-color: #f0f0f0;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: monospace;
+  }
+  
+  pre {
+    background-color: #f5f5f5;
+    padding: 1em;
+    border-radius: 5px;
+    overflow-x: auto;
+  }
+  
+  blockquote {
+    border-left: 4px solid #ddd;
+    padding-left: 1em;
+    margin: 1em 0;
+    color: #666;
+  }
+}
+
+/* 深色模式下的 markdown 样式 */
+@media (prefers-color-scheme: dark) {
+  :deep(.option-content) {
+    code {
+      background-color: #2d2d2d;
+    }
+    
+    pre {
+      background-color: #2a2a2a;
+    }
+    
+    blockquote {
+      border-left-color: #444;
+      color: #999;
+    }
+  }
 }
 
 /* 深色模式适配 */
