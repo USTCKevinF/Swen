@@ -1,13 +1,43 @@
 <script setup lang="ts">
 import { ref } from "vue";
-// import { invoke } from "@tauri-apps/api/core";
+import OpenAI from "openai";
 
 const inputText = ref("");
+const deepseekResponse = ref("");
+const isLoading = ref(false);
 
-// async function greet() {
-//   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-//   greetMsg.value = await invoke("greet", { name: name.value });
-// }
+const openai = new OpenAI({
+  baseURL: 'https://api.deepseek.com',
+  apiKey: 'sk-258b756def1b41dab057106a0998f1ff',
+  dangerouslyAllowBrowser: true // 允许在浏览器中使用
+});
+
+async function getDeepseekExplanation() {
+  if (!inputText.value.trim()) return;
+  
+  isLoading.value = true;
+  deepseekResponse.value = "";
+  
+  try {
+    const completion = await openai.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: inputText.value }
+      ],
+      model: "deepseek-chat",
+      stream: true,
+    });
+    
+    for await (const chunk of completion) {
+      deepseekResponse.value += chunk.choices[0]?.delta?.content || "";
+    }
+  } catch (error) {
+    console.error('DeepSeek API 调用失败:', error);
+    deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
+  } finally {
+    isLoading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -43,9 +73,12 @@ const inputText = ref("");
       </div>
 
       <div class="option-item">
-        <div class="option-header">
+        <div class="option-header" @click="getDeepseekExplanation">
           <span>DeepSeek 解释</span>
-          <span class="arrow">▼</span>
+          <span class="arrow">{{ isLoading ? '...' : '▼' }}</span>
+        </div>
+        <div v-if="deepseekResponse" class="option-content">
+          {{ deepseekResponse }}
         </div>
       </div>
     </div>
@@ -100,6 +133,12 @@ const inputText = ref("");
   font-size: 12px;
 }
 
+.option-content {
+  padding: 15px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
 /* 深色模式适配 */
 @media (prefers-color-scheme: dark) {
   .option-header {
@@ -114,6 +153,11 @@ const inputText = ref("");
   
   .option-item {
     border-color: #444;
+  }
+  
+  .option-content {
+    background-color: #1f1f1f;
+    color: #fff;
   }
 }
 </style>
