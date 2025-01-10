@@ -23,7 +23,7 @@ async function getDeepseekExplanation() {
   try {
     const completion = await openai.chat.completions.create({
       messages: [
-        { role: "system", content: "You are a helpful assistant." },
+        { role: "system", content: "You are a helpful assistant.Please use $ instead of \\( and \\) for LaTeX math expressions. " },
         { role: "user", content: inputText.value }
       ],
       model: "deepseek-chat",
@@ -31,7 +31,9 @@ async function getDeepseekExplanation() {
     });
     
     for await (const chunk of completion) {
-      deepseekResponse.value += chunk.choices[0]?.delta?.content || "";
+      console.log('收到的chunk:', chunk);
+      let content = chunk.choices[0]?.delta?.content || "";
+      deepseekResponse.value += content;
     }
     console.log(deepseekResponse.value);
   } catch (error) {
@@ -96,6 +98,11 @@ async function getDeepseekExplanation() {
         <div class="option-header">
           <span>4o-mini 翻译词/句</span>
           <span class="arrow">▼</span>
+          <MdPreview 
+          :modelValue="inputText"
+          :preview-theme="'default'"
+          class="custom-md-preview"
+        />
         </div>
       </div>
 
@@ -108,14 +115,33 @@ async function getDeepseekExplanation() {
           v-if="deepseekResponse" 
           :modelValue="deepseekResponse"
           :preview-theme="'default'"
-          :style="{ width: '100%' }"
+          class="custom-md-preview"
         />
       </div>
     </div>
   </main>
 </template>
 
-<style scoped>
+<style>
+.md-editor-preview-wrapper {
+    position: relative;
+    flex: 1;
+    box-sizing: border-box;
+    overflow: auto;
+    padding: 0px 15px;
+}
+/* .md-editor-katex-inline {
+  display: flex;
+  justify-content: center;
+}
+全局样式，移除 scoped */
+.md-editor-preview {
+  font-size: 13px !important;
+  word-break: break-all !important;
+  overflow: hidden !important;
+}
+
+/* 保持原有的 scoped 样式 */
 .container {
   padding: 20px;
   height: 100vh;
@@ -135,6 +161,7 @@ async function getDeepseekExplanation() {
   border: 1px solid #ccc;
   border-radius: 8px;
   resize: none;
+  font-size: 14px;
 }
 
 .options-section {
@@ -163,5 +190,11 @@ async function getDeepseekExplanation() {
   font-size: 12px;
 }
 
-
+.custom-md-preview {
+  width: 100%;
+  font-size: 12px; /* 调整为您需要的字体大小 */
+}
+.katex-error {
+  color: black!important;
+}
 </style>
