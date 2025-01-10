@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import OpenAI from "openai";
-import { marked } from 'marked';
+import { MdPreview } from 'md-editor-v3';
+import 'md-editor-v3/lib/preview.css';
 
 const inputText = ref("");
 const deepseekResponse = ref("");
@@ -32,6 +33,7 @@ async function getDeepseekExplanation() {
     for await (const chunk of completion) {
       deepseekResponse.value += chunk.choices[0]?.delta?.content || "";
     }
+    console.log(deepseekResponse.value);
   } catch (error) {
     console.error('DeepSeek API 调用失败:', error);
     deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
@@ -39,11 +41,31 @@ async function getDeepseekExplanation() {
     isLoading.value = false;
   }
 }
-
-const formattedResponse = computed(() => {
-  return marked(deepseekResponse.value);
-});
 </script>
+
+<!-- <template>
+  <div class="container">
+    <div class="input-section">
+      <textarea
+        v-model="inputText"
+        placeholder="请输入你的问题..."
+        rows="4"
+      ></textarea>
+      <button @click="getDeepseekExplanation" :disabled="isLoading">
+        {{ isLoading ? '生成中...' : '生成解释' }}
+      </button>
+    </div>
+
+    <div class="response-section">
+      <MdPreview 
+        v-if="deepseekResponse" 
+        :modelValue="deepseekResponse"
+        :preview-theme="'default'"
+        :style="{ width: '100%' }"
+      />
+    </div>
+  </div>
+</template> -->
 
 <template>
   <main class="container">
@@ -82,7 +104,12 @@ const formattedResponse = computed(() => {
           <span>DeepSeek 解释</span>
           <span class="arrow">{{ isLoading ? '...' : '▼' }}</span>
         </div>
-        <div v-if="deepseekResponse" class="option-content" v-html="formattedResponse"></div>
+        <MdPreview 
+          v-if="deepseekResponse" 
+          :modelValue="deepseekResponse"
+          :preview-theme="'default'"
+          :style="{ width: '100%' }"
+        />
       </div>
     </div>
   </main>
@@ -136,81 +163,5 @@ const formattedResponse = computed(() => {
   font-size: 12px;
 }
 
-.option-content {
-  padding: 15px;
-  line-height: 1.5;
-}
 
-/* 添加 markdown 样式 */
-:deep(.option-content) {
-  h1, h2, h3, h4, h5, h6 {
-    margin-top: 1em;
-    margin-bottom: 0.5em;
-  }
-  
-  p {
-    margin: 0.5em 0;
-  }
-  
-  code {
-    background-color: #f0f0f0;
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
-    font-family: monospace;
-  }
-  
-  pre {
-    background-color: #f5f5f5;
-    padding: 1em;
-    border-radius: 5px;
-    overflow-x: auto;
-  }
-  
-  blockquote {
-    border-left: 4px solid #ddd;
-    padding-left: 1em;
-    margin: 1em 0;
-    color: #666;
-  }
-}
-
-/* 深色模式下的 markdown 样式 */
-@media (prefers-color-scheme: dark) {
-  :deep(.option-content) {
-    code {
-      background-color: #2d2d2d;
-    }
-    
-    pre {
-      background-color: #2a2a2a;
-    }
-    
-    blockquote {
-      border-left-color: #444;
-      color: #999;
-    }
-  }
-}
-
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  .option-header {
-    background-color: #2a2a2a;
-  }
-  
-  .main-input {
-    background-color: #1f1f1f;
-    color: #fff;
-    border-color: #444;
-  }
-  
-  .option-item {
-    border-color: #444;
-  }
-  
-  .option-content {
-    background-color: #1f1f1f;
-    color: #fff;
-  }
-}
 </style>
