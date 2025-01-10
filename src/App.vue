@@ -7,6 +7,7 @@ import 'md-editor-v3/lib/preview.css';
 const inputText = ref("");
 const deepseekResponse = ref("");
 const isLoading = ref(false);
+const copySuccess = ref(false);
 
 const openai = new OpenAI({
   baseURL: 'https://api.deepseek.com',
@@ -43,39 +44,25 @@ async function getDeepseekExplanation() {
     isLoading.value = false;
   }
 }
-</script>
 
-<!-- <template>
-  <div class="container">
-    <div class="input-section">
-      <textarea
-        v-model="inputText"
-        placeholder="请输入你的问题..."
-        rows="4"
-      ></textarea>
-      <button @click="getDeepseekExplanation" :disabled="isLoading">
-        {{ isLoading ? '生成中...' : '生成解释' }}
-      </button>
-    </div>
-
-    <div class="response-section">
-      <MdPreview 
-        v-if="deepseekResponse" 
-        :modelValue="deepseekResponse"
-        :preview-theme="'default'"
-        :style="{ width: '100%' }"
-      />
-    </div>
-  </div>
-</template> -->
-
+async function copyToClipboard() {
+  try {
+    await navigator.clipboard.writeText(deepseekResponse.value);
+    copySuccess.value = true;
+    setTimeout(() => {
+      copySuccess.value = false;
+    }, 2000);
+  } catch (err) {
+    console.error('复制失败:', err);
+  }
+}
+</script>   
 <template>
   <main class="container">
     <div class="input-section">
       <textarea 
         v-model="inputText" 
         class="main-input" 
-        placeholder="请输入文本..."
       ></textarea>
     </div>
 
@@ -98,18 +85,26 @@ async function getDeepseekExplanation() {
         <div class="option-header">
           <span>4o-mini 翻译词/句</span>
           <span class="arrow">▼</span>
-          <MdPreview 
-          :modelValue="inputText"
-          :preview-theme="'default'"
-          class="custom-md-preview"
-        />
         </div>
       </div>
 
       <div class="option-item">
         <div class="option-header" @click="getDeepseekExplanation">
           <span>DeepSeek 解释</span>
-          <span class="arrow">{{ isLoading ? '...' : '▼' }}</span>
+          <div class="header-actions">
+            <button 
+              v-if="deepseekResponse" 
+              class="copy-button" 
+              @click.stop="copyToClipboard"
+            >
+              <span v-if="copySuccess">✓ 已复制</span>
+              <span v-else>复制内容</span>
+            </button>
+            <span class="loading-icon" v-if="isLoading">
+              <span class="spinner"></span>
+            </span>
+            <span class="arrow" v-else>▼</span>
+          </div>
         </div>
         <MdPreview 
           v-if="deepseekResponse" 
@@ -143,11 +138,11 @@ async function getDeepseekExplanation() {
 
 /* 保持原有的 scoped 样式 */
 .container {
-  padding: 20px;
+  padding: 7px;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 7px;
 }
 
 .input-section {
@@ -162,6 +157,7 @@ async function getDeepseekExplanation() {
   border-radius: 8px;
   resize: none;
   font-size: 14px;
+  outline: none;
 }
 
 .options-section {
@@ -178,6 +174,7 @@ async function getDeepseekExplanation() {
 }
 
 .option-header {
+  font-size: 15px;
   padding: 10px 15px;
   display: flex;
   justify-content: space-between;
@@ -196,5 +193,56 @@ async function getDeepseekExplanation() {
 }
 .katex-error {
   color: black!important;
+}
+
+.loading-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.copy-button {
+  padding: 4px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #495057;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 28px;
+}
+
+.copy-button:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}
+
+.copy-button:active {
+  background-color: #dee2e6;
+  transform: translateY(1px);
 }
 </style>
