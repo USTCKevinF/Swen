@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import DeepseekExplanation from './components/DeepseekExplanation.vue';
-import { listen } from '@tauri-apps/api/event';
+import ArrowIcon from './assets/arrow.svg';
 
 const inputText = ref("");
-
-onMounted(async () => {
-  await listen('selected-text', (event: any) => {
-    inputText.value = event.payload;
-  });
-});
 </script>
 
 <template>
@@ -25,14 +19,14 @@ onMounted(async () => {
       <div class="option-item">
         <div class="option-header">
           <span>金山词霸</span>
-          <span class="arrow">▼</span>
+          <img :src="ArrowIcon" class="arrow" alt="arrow" />
         </div>
       </div>
 
       <div class="option-item">
         <div class="option-header">
           <span>4o-mini 翻译词/句</span>
-          <span class="arrow">▼</span>
+          <img :src="ArrowIcon" class="arrow" alt="arrow" />
         </div>
       </div>
 
@@ -49,6 +43,7 @@ onMounted(async () => {
     overflow: auto;
     padding: 0px 15px;
 }
+
 .md-editor-preview {
   font-size: 13px !important;
   word-break: break-all !important;
@@ -62,6 +57,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 7px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .input-section {
@@ -77,6 +74,7 @@ onMounted(async () => {
   resize: none;
   font-size: 14px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .options-section {
@@ -84,32 +82,43 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .option-item {
-  border: 1px solid #ccc;
+  border: 0px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
+  background-color: #f8f8f8;
 }
 
 .option-header {
-  font-size: 15px;
-  padding: 10px 15px;
+  font-size: 13px;
+  padding: 7px 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f5f5f5;
+  background-color: #f8f8f8;
   cursor: pointer;
 }
 
 .arrow {
-  font-size: 12px;
+  width: 12px;
+  height: 12px;
+  transition: transform 0.3s ease;
+}
+
+.arrow.active {
+  transform: rotate(180deg);
 }
 
 .custom-md-preview {
   width: 100%;
   font-size: 12px; /* 调整为您需要的字体大小 */
+  background-color: #f8f8f8;
 }
+
 .katex-error {
   color: black!important;
 }

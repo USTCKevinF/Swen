@@ -12,10 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "yysm_tool",
-        "width": 800,
-        "height": 500,
-        "visible": false
+        "title": "",
+
+        "visible": true
       }
     ],
     "security": {

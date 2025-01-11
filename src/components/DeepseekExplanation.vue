@@ -3,6 +3,9 @@ import { ref } from "vue";
 import OpenAI from "openai";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
+import ArrowIcon from '../assets/arrow.svg';
+import CopyIcon from '../assets/copy.svg';
+import RedoIcon from '../assets/redo.svg';
 
 const props = defineProps<{
   inputText: string
@@ -57,6 +60,10 @@ async function copyToClipboard() {
     console.error('复制失败:', err);
   }
 }
+
+function handleRedo() {
+  getDeepseekExplanation();
+}
 </script>
 
 <template>
@@ -64,46 +71,107 @@ async function copyToClipboard() {
     <div class="option-header" @click="getDeepseekExplanation">
       <span>DeepSeek 解释</span>
       <div class="header-actions">
-        <button 
-          v-if="deepseekResponse" 
-          class="copy-button" 
-          @click.stop="copyToClipboard"
-        >
-          <span v-if="copySuccess">✓ 已复制</span>
-          <span v-else>复制内容</span>
-        </button>
         <span class="loading-icon" v-if="isLoading">
           <span class="spinner"></span>
         </span>
-        <span class="arrow" v-else>▼</span>
+        <img v-else :src="ArrowIcon" class="arrow" alt="arrow" />
       </div>
     </div>
-    <MdPreview 
-      v-if="deepseekResponse" 
-      :modelValue="deepseekResponse"
-      :preview-theme="'default'"
-      class="custom-md-preview"
-    />
+    <div v-if="deepseekResponse" class="response-container">
+      <MdPreview 
+        :modelValue="deepseekResponse"
+        :preview-theme="'default'"
+        class="custom-md-preview"
+      />
+      <div v-if="!isLoading" class="copy-container">
+        <div class="icon-wrapper">
+          <img 
+            :src="CopyIcon" 
+            alt="copy" 
+            @click="copyToClipboard"
+            class="action-icon"
+          />
+          <span class="icon-tooltip">复制</span>
+        </div>
+        <div class="icon-wrapper">
+          <img 
+            :src="RedoIcon" 
+            alt="redo" 
+            @click="handleRedo"
+            class="action-icon"
+          />
+          <span class="icon-tooltip">重新生成</span>
+        </div>
+        <span v-if="copySuccess" class="copy-tooltip">已复制</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* 保留相关样式 */
-.option-item {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.option-header {
-  font-size: 15px;
-  padding: 10px 15px;
+.response-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f5f5f5;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* 其他样式保持不变... */
+.copy-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 13px;
+  padding-bottom: 10px;
+}
+
+.action-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 0.9;
+
+}
+
+.action-icon:hover {
+  opacity: 1;
+}
+
+.copy-tooltip {
+  position: absolute;
+  left: 30px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.copy-button {
+  display: none;
+}
+
+.icon-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.icon-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.icon-wrapper:hover .icon-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
 </style> 
