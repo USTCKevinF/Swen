@@ -14,7 +14,8 @@
       {
         "title": "yysm_tool",
         "width": 800,
-        "height": 600
+        "height": 500,
+        "visible": false
       }
     ],
     "security": {

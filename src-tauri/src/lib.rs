@@ -1,4 +1,6 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+mod tray;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! 欢迎使用YYSM_Tool!", name)
@@ -9,6 +11,10 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![greet])
+        .setup(|app: &mut tauri::App| {
+            tray::init_tray(&app.handle())?;
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
