@@ -1,62 +1,17 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import OpenAI from "openai";
-import { MdPreview } from 'md-editor-v3';
-import 'md-editor-v3/lib/preview.css';
+import { ref, onMounted } from "vue";
+import DeepseekExplanation from './components/DeepseekExplanation.vue';
+import { listen } from '@tauri-apps/api/event';
 
 const inputText = ref("");
-const deepseekResponse = ref("");
-const isLoading = ref(false);
-const copySuccess = ref(false);
 
-const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: 'sk-258b756def1b41dab057106a0998f1ff',
-  dangerouslyAllowBrowser: true // 允许在浏览器中使用
+onMounted(async () => {
+  await listen('selected-text', (event: any) => {
+    inputText.value = event.payload;
+  });
 });
+</script>
 
-async function getDeepseekExplanation() {
-  if (!inputText.value.trim()) return;
-  
-  isLoading.value = true;
-  deepseekResponse.value = "";
-  
-  try {
-    const completion = await openai.chat.completions.create({
-      messages: [
-        { role: "system", content: "You are a helpful assistant.Please use $ instead of \\( and \\) for LaTeX math expressions. " },
-        { role: "user", content: inputText.value }
-      ],
-      model: "deepseek-chat",
-      stream: true,
-    });
-    
-    for await (const chunk of completion) {
-      console.log('收到的chunk:', chunk);
-      let content = chunk.choices[0]?.delta?.content || "";
-      deepseekResponse.value += content;
-    }
-    console.log(deepseekResponse.value);
-  } catch (error) {
-    console.error('DeepSeek API 调用失败:', error);
-    deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-async function copyToClipboard() {
-  try {
-    await navigator.clipboard.writeText(deepseekResponse.value);
-    copySuccess.value = true;
-    setTimeout(() => {
-      copySuccess.value = false;
-    }, 2000);
-  } catch (err) {
-    console.error('复制失败:', err);
-  }
-}
-</script>   
 <template>
   <main class="container">
     <div class="input-section">
@@ -67,13 +22,6 @@ async function copyToClipboard() {
     </div>
 
     <div class="options-section">
-      <div class="option-item">
-        <div class="option-header">
-          <span>自动检测</span>
-          <span class="arrow">▼</span>
-        </div>
-      </div>
-
       <div class="option-item">
         <div class="option-header">
           <span>金山词霸</span>
@@ -88,31 +36,7 @@ async function copyToClipboard() {
         </div>
       </div>
 
-      <div class="option-item">
-        <div class="option-header" @click="getDeepseekExplanation">
-          <span>DeepSeek 解释</span>
-          <div class="header-actions">
-            <button 
-              v-if="deepseekResponse" 
-              class="copy-button" 
-              @click.stop="copyToClipboard"
-            >
-              <span v-if="copySuccess">✓ 已复制</span>
-              <span v-else>复制内容</span>
-            </button>
-            <span class="loading-icon" v-if="isLoading">
-              <span class="spinner"></span>
-            </span>
-            <span class="arrow" v-else>▼</span>
-          </div>
-        </div>
-        <MdPreview 
-          v-if="deepseekResponse" 
-          :modelValue="deepseekResponse"
-          :preview-theme="'default'"
-          class="custom-md-preview"
-        />
-      </div>
+      <DeepseekExplanation :inputText="inputText" />
     </div>
   </main>
 </template>
@@ -125,11 +49,6 @@ async function copyToClipboard() {
     overflow: auto;
     padding: 0px 15px;
 }
-/* .md-editor-katex-inline {
-  display: flex;
-  justify-content: center;
-}
-全局样式，移除 scoped */
 .md-editor-preview {
   font-size: 13px !important;
   word-break: break-all !important;
