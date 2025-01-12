@@ -6,6 +6,7 @@ import 'md-editor-v3/lib/preview.css';
 import ArrowIcon from '../assets/arrow.svg';
 import CopyIcon from '../assets/copy.svg';
 import RedoIcon from '../assets/redo.svg';
+import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
   inputText: string
@@ -13,7 +14,6 @@ const props = defineProps<{
 
 const deepseekResponse = ref("");
 const isLoading = ref(false);
-const copySuccess = ref(false);
 
 const openai = new OpenAI({
   baseURL: 'https://api.deepseek.com',
@@ -52,12 +52,16 @@ async function getDeepseekExplanation() {
 async function copyToClipboard() {
   try {
     await navigator.clipboard.writeText(deepseekResponse.value);
-    copySuccess.value = true;
-    setTimeout(() => {
-      copySuccess.value = false;
-    }, 2000);
+    ElMessage({
+      message: '复制成功',
+      type: 'success',
+    });
   } catch (err) {
     console.error('复制失败:', err);
+    ElMessage({
+      message: '复制失败',
+      type: 'error',
+    });
   }
 }
 
@@ -102,7 +106,6 @@ function handleRedo() {
           />
           <span class="icon-tooltip">重新生成</span>
         </div>
-        <span v-if="copySuccess" class="copy-tooltip">已复制</span>
       </div>
     </div>
   </div>
@@ -159,11 +162,11 @@ function handleRedo() {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(22, 22, 22, 0.7);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 10px;
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
