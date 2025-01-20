@@ -132,7 +132,6 @@ function handleRedo() {
   height: 20px;
   cursor: pointer;
   opacity: 0.9;
-
 }
 
 .action-icon:hover {
