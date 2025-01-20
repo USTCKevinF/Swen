@@ -1,38 +1,66 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import DeepseekExplanation from './components/DeepseekExplanation.vue';
-import ArrowIcon from './assets/arrow.svg';
+import { watch, onMounted } from 'vue';
+import { ref } from 'vue'
+import { RouterView, useRouter } from 'vue-router'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+const router = useRouter()
 
-const inputText = ref("");
+let appWindow: any
+// 路由映射
+const routeMap: Record<string, string> = {
+  home: '/',
+  settings: '/settings',
+}
+
+const windowInfo = ref('')
+const currentLabel = ref('')
+// 添加获取窗口信息的方法
+const getWindowInfo = async () => {
+  try {
+    const window = await getCurrentWebviewWindow()
+    windowInfo.value = JSON.stringify(window, null, 2)
+  } catch (error) {
+    console.error('获取窗口信息失败:', error)
+    windowInfo.value = '获取失败: ' + error
+  }
+}
+
+// 根据标签更新路由
+const updateRouteByLabel = (label: string) => {
+  if (routeMap[label]) {
+    console.log("routeMap[label]是",routeMap[label])
+    router.push(routeMap[label])
+    currentLabel.value = label
+  }
+}
+
+onMounted(async () => {
+  try {
+    appWindow = await getCurrentWebviewWindow()
+
+    // 设置初始路由
+    updateRouteByLabel(appWindow.label)
+    
+    // 监听标签变化
+    watch(() => appWindow.label, (newLabel: string) => {
+      updateRouteByLabel(newLabel)
+    })
+  } catch (error) {
+    console.error('获取当前窗口失败:', error)
+  }
+})
+
 </script>
 
 <template>
-  <main class="container">
-    <div class="input-section">
-      <textarea 
-        v-model="inputText" 
-        class="main-input" 
-      ></textarea>
+  <div class="window-info">
+    <div class="label-info">
+      当前窗口标签: {{ currentLabel }}
     </div>
-
-    <div class="options-section">
-      <div class="option-item">
-        <div class="option-header">
-          <span>金山词霸</span>
-          <img :src="ArrowIcon" class="arrow" alt="arrow" />
-        </div>
-      </div>
-
-      <div class="option-item">
-        <div class="option-header">
-          <span>4o-mini 翻译词/句</span>
-          <img :src="ArrowIcon" class="arrow" alt="arrow" />
-        </div>
-      </div>
-
-      <DeepseekExplanation :inputText="inputText" />
-    </div>
-  </main>
+    <button @click="getWindowInfo">获取窗口信息</button>
+    <pre v-if="windowInfo">{{ windowInfo }}</pre>
+  </div>
+  <RouterView />
 </template>
 
 <style>
@@ -50,127 +78,10 @@ const inputText = ref("");
   overflow: hidden !important;
 }
 
-/* 保持原有的 scoped 样式 */
-.container {
-  padding: 7px;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.input-section {
-  flex: 0 0 auto;
-}
-
-.main-input {
-  width: 100%;
-  height: 150px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  resize: none;
-  font-size: 14px;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.options-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  overflow-x: hidden;
-}
-
-.option-item {
-  border: 0px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #f8f8f8;
-}
-
-.option-header {
-  font-size: 13px;
-  padding: 7px 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f8f8f8;
-  cursor: pointer;
-}
-
-.arrow {
-  width: 12px;
-  height: 12px;
-  transition: transform 0.3s ease;
-}
-
-.arrow.active {
-  transform: rotate(180deg);
-}
-
-.custom-md-preview {
-  width: 100%;
-  font-size: 12px; /* 调整为您需要的字体大小 */
-  background-color: #f8f8f8;
-}
-
-.katex-error {
-  color: black!important;
-}
-
-.loading-icon {
-  display: inline-flex;
-  align-items: center;
-}
-
-.spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.copy-button {
-  padding: 4px 12px;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  color: #495057;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 80px;
-  height: 28px;
-}
-
-.copy-button:hover {
-  background-color: #e9ecef;
-  border-color: #ced4da;
-}
-
-.copy-button:active {
-  background-color: #dee2e6;
-  transform: translateY(1px);
+.label-info {
+  margin-bottom: 10px;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
 }
 </style>
