@@ -81,30 +81,30 @@ function handleRedo() {
         <img v-else :src="ArrowIcon" class="arrow" alt="arrow" />
       </div>
     </div>
-    <div v-if="deepseekResponse" class="response-container">
+    <div v-if="deepseekResponse" class="flex flex-col gap-2.5">
       <MdPreview 
         :modelValue="deepseekResponse"
         :preview-theme="'default'"
         class="custom-md-preview"
       />
-      <div v-if="!isLoading" class="copy-container">
-        <div class="icon-wrapper">
+      <div v-if="!isLoading" class="relative flex items-center gap-2.5 pl-3.5 pb-2.5">
+        <div class="relative inline-block">
           <img 
             :src="CopyIcon" 
             alt="copy" 
             @click="copyToClipboard"
-            class="action-icon"
+            class="w-5 h-5 cursor-pointer opacity-90 hover:opacity-100"
           />
-          <span class="icon-tooltip">复制</span>
+          <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">复制</span>
         </div>
-        <div class="icon-wrapper">
+        <div class="relative inline-block">
           <img 
             :src="RedoIcon" 
             alt="redo" 
             @click="handleRedo"
-            class="action-icon"
+            class="w-5 h-5 cursor-pointer opacity-90 hover:opacity-100"
           />
-          <span class="icon-tooltip">重新生成</span>
+          <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">重新生成</span>
         </div>
       </div>
     </div>
@@ -112,68 +112,7 @@ function handleRedo() {
 </template>
 
 <style scoped>
-.response-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.copy-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-left: 13px;
-  padding-bottom: 10px;
-}
-
-.action-icon {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  opacity: 0.9;
-}
-
-.action-icon:hover {
-  opacity: 1;
-}
-
-.copy-tooltip {
-  position: absolute;
-  left: 30px;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
 .copy-button {
   display: none;
-}
-
-.icon-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.icon-tooltip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(22, 22, 22, 0.7);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s, visibility 0.2s;
-}
-
-.icon-wrapper:hover .icon-tooltip {
-  opacity: 1;
-  visibility: visible;
 }
 </style> 
