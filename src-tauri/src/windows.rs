@@ -113,8 +113,9 @@ pub fn config_window() {
 pub fn home_window() {
     let (window, _exists) = build_window("home", "Home");
     window
-        .set_min_size(Some(tauri::LogicalSize::new(800, 400)))
+        .set_min_size(Some(tauri::LogicalSize::new(300, 500)))
         .unwrap();
-    window.set_size(tauri::LogicalSize::new(800, 600)).unwrap();
+    window.set_size(tauri::LogicalSize::new(300, 500)).unwrap();
     window.center().unwrap();
+    window.set_always_on_top(true).unwrap();
 }

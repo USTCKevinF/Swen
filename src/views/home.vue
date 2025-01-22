@@ -1,170 +1,133 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { onMounted, onUnmounted } from 'vue';
+import { listen } from '@tauri-apps/api/event';
 import DeepseekExplanation from '../components/DeepseekExplanation.vue';
-import ArrowIcon from '../assets/arrow.svg';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 const inputText = ref("");
+const currentWindow = getCurrentWindow();
+const currentWebviewWindow = getCurrentWebviewWindow();
+let blurTimeout: ReturnType<typeof setTimeout> | null = null;
+let unlisten: any = null;
+
+// 监听失去焦点事件
+const listenBlur = async () => {
+  unlisten = await listen('tauri://blur', () => {
+    if (currentWindow.label === 'home') {
+        if (blurTimeout) {
+            clearTimeout(blurTimeout);
+        }
+        // 100ms延迟关闭窗口，避免拖动窗口时误关闭
+        blurTimeout = setTimeout(async () => {
+            await currentWindow.close();
+        }, 100);
+    }
+  });
+};
+
+onMounted(async () => {
+  try {
+    currentWindow.show();
+    await listenBlur();
+    
+    // 监听获得焦点事件，取消关闭计时
+    await listen('tauri://focus', () => {
+      if (blurTimeout) {
+        clearTimeout(blurTimeout);
+      }
+    });
+
+    // 监听移动事件，取消关闭计时
+    await listen('tauri://move', () => {
+      if (blurTimeout) {
+        clearTimeout(blurTimeout);
+      }
+    });
+  } catch (err) {
+    console.error(err)
+  }
+});
+
+// 清理事件监听
+onUnmounted(() => {
+  if (unlisten) {
+    unlisten();
+  }
+});
 </script>
 
 <template>
-  <main class="container">
-    <el-input
-        v-model="inputText"
-        class="main-input"
-        resize="none"
-        :rows="4"
-        type="textarea"
-    />
-
-    <div class="options-section">
-      <div class="option-item">
-        <div class="option-header">
-          <span>金山词霸</span>
-          <img :src="ArrowIcon" class="arrow" alt="arrow" />
-        </div>
-      </div>
-
-      <div class="option-item">
-        <div class="option-header">
-          <span>4o-mini 翻译词/句</span>
-          <img :src="ArrowIcon" class="arrow" alt="arrow" />
-        </div>
-      </div>
-
-      <DeepseekExplanation :inputText="inputText" />
-    </div>
-  </main>
+  <div class="bg-red-200 h-full rounded-lg">
+    <el-container>
+      <el-header class="bg-gray-200 h-8" data-tauri-drag-region='true'></el-header>
+      <el-main class="p-3">
+        <el-input
+            v-model="inputText"
+            class="w-full text-sm outline-none mb-2"
+            resize="none"
+            :rows="4"
+            type="textarea"
+        />
+        <DeepseekExplanation :inputText="inputText" />
+      </el-main>
+    </el-container>
+  </div>
 </template>
+
+
 <style>
 .md-editor-preview-wrapper {
-    position: relative;
-    flex: 1;
-    box-sizing: border-box;
-    overflow: auto;
-    padding: 0px 15px;
+  @apply relative flex-1 box-border overflow-auto px-4;
 }
-
 .md-editor-preview {
-  font-size: 13px !important;
-  word-break: break-all !important;
-  overflow: hidden !important;
-}
-
-/* 保持原有的 scoped 样式 */
-.container {
-  padding: 7px;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  max-width: 100%;
-}
-
-.input-section {
-  flex: 0 0 auto;
-}
-
-.main-input {
-  width: 100%;
-  /* border: 1px solid #ccc; */
-  resize: none;
-  font-size: 14px;
-  outline: none;    
+  @apply text-sm break-all overflow-hidden;
 }
 
 .options-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
+  @apply flex-1 flex flex-col gap-2.5 w-full;
 }
 
 .option-item {
-  border: 0px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #f8f8f8;
+  @apply rounded-lg overflow-hidden bg-gray-50;
 }
 
 .option-header {
-  font-size: 13px;
-  padding: 7px 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f8f8f8;
-  cursor: pointer;
+  @apply text-sm py-2 px-4 flex justify-between items-center bg-gray-50 cursor-pointer;
 }
 
 .arrow {
-  width: 12px;
-  height: 12px;
-  transition: transform 0.3s ease;
+  @apply w-3 h-3 transition-transform duration-300 ease-in-out;
 }
 
 .arrow.active {
-  transform: rotate(180deg);
+  @apply rotate-180;
 }
 
 .custom-md-preview {
-  width: 100%;
-  font-size: 12px; /* 调整为您需要的字体大小 */
-  background-color: #f8f8f8;
+  @apply w-full text-xs bg-gray-50;
 }
 
 .katex-error {
-  color: black!important;
+  @apply text-black;
 }
 
 .loading-icon {
-  display: inline-flex;
-  align-items: center;
+  @apply inline-flex items-center;
 }
 
 .spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  @apply w-3 h-3 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin;
 }
 
 .header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  @apply flex items-center gap-3;
 }
 
 .copy-button {
-  padding: 4px 12px;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  color: #495057;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 80px;
-  height: 28px;
-}
-
-.copy-button:hover {
-  background-color: #e9ecef;
-  border-color: #ced4da;
-}
-
-.copy-button:active {
-  background-color: #dee2e6;
-  transform: translateY(1px);
+  @apply px-3 py-1 bg-gray-50 border border-gray-300 rounded-lg cursor-pointer text-sm text-gray-600
+         hover:bg-gray-100 hover:border-gray-400 active:bg-gray-200 active:translate-y-px
+         flex items-center justify-center min-w-[80px] h-7 transition-all duration-200;
 }
 </style>
