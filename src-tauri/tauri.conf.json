@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "",
-
-        "visible": true
+        "title": "Daemon",
+        "label": "daemon",
+        "visible": false,
+        "additionalBrowserArgs": "--disable-web-security",
+        "useHttpsScheme": true,
+        "url": "daemon.html"
       }
     ],
     "security": {

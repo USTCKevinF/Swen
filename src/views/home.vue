@@ -4,11 +4,9 @@ import { onMounted, onUnmounted } from 'vue';
 import { listen } from '@tauri-apps/api/event';
 import DeepseekExplanation from '../components/DeepseekExplanation.vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 const inputText = ref("");
 const currentWindow = getCurrentWindow();
-const currentWebviewWindow = getCurrentWebviewWindow();
 let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 let unlisten: any = null;
 
@@ -59,9 +57,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-red-200 h-full rounded-lg">
+  <div class="h-full rounded-lg bg-transparent backdrop-blur-sm">
     <el-container>
-      <el-header class="bg-gray-200 h-8" data-tauri-drag-region='true'></el-header>
+      <el-header class="h-8" data-tauri-drag-region='true'></el-header>
       <el-main class="p-3">
         <el-input
             v-model="inputText"
@@ -78,6 +76,11 @@ onUnmounted(() => {
 
 
 <style>
+:global(body) {
+  background: transparent;
+  height: 100vh;
+}
+
 .md-editor-preview-wrapper {
   @apply relative flex-1 box-border overflow-auto px-4;
 }
@@ -94,7 +97,7 @@ onUnmounted(() => {
 }
 
 .option-header {
-  @apply text-sm py-2 px-4 flex justify-between items-center bg-gray-50 cursor-pointer;
+  @apply text-sm py-2 px-4 flex justify-between items-center bg-[#ededed] cursor-pointer;
 }
 
 .arrow {

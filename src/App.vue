@@ -7,7 +7,8 @@ const router = useRouter()
 let appWindow: any
 // 路由映射
 const routeMap: Record<string, string> = {
-  home: '/',
+  default: '/',
+  home: '/home',
   settings: '/settings',
 }
 const currentLabel = ref('')
