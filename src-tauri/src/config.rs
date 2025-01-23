@@ -1,12 +1,12 @@
 use crate::APP;
 use dirs::config_dir;
-use log::{info, warn};
+use log::info;
 use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::Manager;
 use tauri::Wry;
-use tauri_plugin_store::{Store, StoreBuilder};
+use tauri_plugin_store::Store;
 
 pub struct StoreWrapper(pub Mutex<Store<Wry>>);
 
@@ -21,7 +21,7 @@ pub fn get(key: &str) -> Option<Value> {
 
 pub fn set<T: serde::ser::Serialize>(key: &str, value: T) {
     let state = APP.get().unwrap().state::<StoreWrapper>();
-    let mut store = state.0.lock().unwrap();
+    let store = state.0.lock().unwrap();
     store.set(key.to_string(), json!(value));
     store.save().unwrap();
 }

@@ -2,16 +2,9 @@
 mod config;
 mod tray;
 mod windows;
-use config::*;
-use windows::*;
 use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 use tauri::Manager;
-use log::info;
-use tauri_plugin_store::Store;
-use tauri::Wry;
-use tauri_plugin_store::StoreExt;
-use serde_json::json;
 pub struct StringWrapper(pub Mutex<String>);
 // Global AppHandle
 pub static APP: OnceCell<tauri::AppHandle> = OnceCell::new();
