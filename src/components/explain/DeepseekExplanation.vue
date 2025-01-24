@@ -3,9 +3,9 @@ import { ref } from "vue";
 import OpenAI from "openai";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
-import ArrowIcon from '../assets/arrow.svg';
-import CopyIcon from '../assets/copy.svg';
-import RedoIcon from '../assets/redo.svg';
+import ArrowIcon from '../../assets/arrow.svg';
+import CopyIcon from '../../assets/copy.svg';
+import RedoIcon from '../../assets/redo.svg';
 import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
