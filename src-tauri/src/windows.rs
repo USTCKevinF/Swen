@@ -104,7 +104,7 @@ fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
 pub fn config_window() {
     let (window, _exists) = build_window("settings", "Settings");
     window
-        .set_min_size(Some(tauri::LogicalSize::new(800, 400)))
+        .set_min_size(Some(tauri::LogicalSize::new(800, 600)))
         .unwrap();
     window.set_size(tauri::LogicalSize::new(800, 600)).unwrap();
     window.center().unwrap();
