@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { onMounted, onUnmounted } from 'vue';
 import { listen } from '@tauri-apps/api/event';
-import DeepseekExplanation from '../components/DeepseekExplanation.vue';
+import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const inputText = ref("");
