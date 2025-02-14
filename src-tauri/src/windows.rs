@@ -2,8 +2,8 @@
 // use crate::config::set;
 use crate::APP;
 use log::{info, warn};
-use tauri::Monitor;
 use tauri::Manager;
+use tauri::Monitor;
 use tauri::WebviewWindow;
 
 // Get monitor where the mouse is currently located

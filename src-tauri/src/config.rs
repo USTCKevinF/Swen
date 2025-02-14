@@ -1,35 +1,28 @@
-use crate::APP;
 use dirs::config_dir;
 use log::info;
-use serde_json::{json, Value};
 use std::path::PathBuf;
-use std::sync::Mutex;
-use tauri::Manager;
-use tauri::Wry;
+use tauri_plugin_store::StoreExt;
+use tauri::{Manager, Wry};
+
 use tauri_plugin_store::Store;
+use std::sync::Arc;
+use std::sync::Mutex;
+use crate::APP;
 
-pub struct StoreWrapper(pub Mutex<Store<Wry>>);
+pub struct StoreWrapper(pub Mutex<Arc<Store<Wry>>>);
 
-pub fn get(key: &str) -> Option<Value> {
+#[tauri::command]
+pub fn reload_store() {
     let state = APP.get().unwrap().state::<StoreWrapper>();
     let store = state.0.lock().unwrap();
-    match store.get(key) {
-        Some(value) => Some(value.clone()),
-        None => None,
-    }
+    store.reload().unwrap();
 }
 
-pub fn set<T: serde::ser::Serialize>(key: &str, value: T) {
-    let state = APP.get().unwrap().state::<StoreWrapper>();
-    let store = state.0.lock().unwrap();
-    store.set(key.to_string(), json!(value));
-    store.save().unwrap();
-}
-
-pub fn is_first_run() -> bool {
-    let state = APP.get().unwrap().state::<StoreWrapper>();
-    let store = state.0.lock().unwrap();
-    store.is_empty()
+pub fn init_config(app: &mut tauri::App) {
+    let config_path = get_config_path(app);
+    info!("Load config from: {:?}", config_path);
+    let store = app.handle().store(config_path).unwrap();
+    app.manage(StoreWrapper(Mutex::new(store)));
 }
 
 pub fn get_config_path(app: &mut tauri::App) -> PathBuf {

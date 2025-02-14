@@ -38,7 +38,13 @@
             "core:window:allow-show",
             "core:window:allow-start-dragging",
             "core:event:default",
-            "core:event:allow-listen"
+            "core:event:allow-listen",
+            "core:path:allow-resolve-directory",
+            "core:path:default",
+            "store:allow-load",
+            "store:default",
+            "fs:default",
+            "fs:allow-app-read"
           ]
         }
       ]
