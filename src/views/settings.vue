@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import General from '../components/settings/general.vue';
 import Shortcut from '../components/settings/shortcut.vue';
 import Model from '../components/settings/model.vue';
@@ -8,6 +9,7 @@ import About from '../components/settings/about.vue';
 import Funding from '../components/settings/funding.vue';
 import { Setting, Operation, Monitor, InfoFilled, MilkTea } from '@element-plus/icons-vue'
 
+const { t } = useI18n();
 const currentWindow = getCurrentWindow();
 
 const currentComponent = ref('General');
@@ -28,12 +30,12 @@ onMounted(async () => {
 
 const getPageTitle = () => {
   switch(currentComponent.value) {
-    case 'General': return '通用设置';
-    case 'Shortcut': return '快捷键设置';
-    case 'Model': return '模型设置';
-    case 'About': return '关于应用';
-    case 'Funding': return '赞助奶茶';
-    default: return '设置';
+    case 'General': return t('settings.general.title');
+    case 'Shortcut': return t('settings.shortcut.title');
+    case 'Model': return t('settings.model.title');
+    case 'About': return t('settings.about.title');
+    case 'Funding': return t('settings.funding.title');
+    default: return t('settings.title');
   }
 };
 
@@ -53,28 +55,28 @@ const componentMap = {
       <el-header class="h-9 bg-[#f7f6f6] " data-tauri-drag-region='true'></el-header>
       <el-container>
         <el-aside class="w-[240px] border-r border-gray-100 bg-white overflow-hidden">
-          <div class="py-4 px-4 font-medium text-gray-400 text-sm">设置</div>
+          <div class="py-4 px-4 font-medium text-gray-400 text-sm">{{ t('settings.title') }}</div>
           <el-menu class="h-full !border-0" :default-active="activeIndex">
             <el-menu-item index="1" @click="switchComponent('General', '1')" class="menu-item">
               <el-icon><Setting /></el-icon>
-              <span>通用设置</span>
+              <span>{{ t('settings.general.title') }}</span>
             </el-menu-item>
             <el-menu-item index="2" @click="switchComponent('Shortcut', '2')" class="menu-item">
               <el-icon><Operation /></el-icon>
-              <span>快捷键设置</span>
+              <span>{{ t('settings.shortcut.title') }}</span>
             </el-menu-item>
             <el-menu-item index="3" @click="switchComponent('Model', '3')" class="menu-item">
               <el-icon><Monitor /></el-icon>
-              <span>模型设置</span>
+              <span>{{ t('settings.model.title') }}</span>
             </el-menu-item>
-            <div class="py-4 px-4 font-medium text-gray-400 text-sm">关于</div>
+            <div class="py-4 px-4 font-medium text-gray-400 text-sm">{{ t('settings.about.title') }}</div>
             <el-menu-item index="4" @click="switchComponent('About', '4')" class="menu-item">
               <el-icon><InfoFilled /></el-icon>
-              <span>关于应用</span>
+              <span>{{ t('settings.about.title') }}</span>
             </el-menu-item>
             <el-menu-item index="5" @click="switchComponent('Funding', '5')" class="menu-item">
               <el-icon><MilkTea /></el-icon>
-              <span>赞助奶茶</span>
+              <span>{{ t('settings.funding.title') }}</span>
             </el-menu-item>
           </el-menu>
         </el-aside> 

@@ -1,8 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { useI18n } from 'vue-i18n'
+import { useConfig } from './composables/useConfig'
+
 const router = useRouter()
+const { locale } = useI18n()
+const { property: language } = useConfig('language', 'zh')
+
+// 添加 watch 来处理语言变化
+watch(language, (newValue: string) => {
+  if (newValue) {
+    console.log("语言更新为:", newValue)
+    locale.value = newValue
+  }
+})
 
 let appWindow: any
 // 路由映射
@@ -26,7 +39,6 @@ onMounted(async () => {
     appWindow = await getCurrentWebviewWindow()
     // 设置初始路由
     updateRouteByLabel(appWindow.label)
-
   } catch (error) {
     console.error('获取当前窗口失败:', error)
   }

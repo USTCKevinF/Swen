@@ -1,8 +1,8 @@
 <template>
     <div>
-        <el-form label-width="120px" class="settings-form">
-            <el-form-item label="显示语言">
-                <el-select v-model="language" placeholder="请选择语言" >
+        <el-form label-width="140px" class="settings-form">
+            <el-form-item :label="t('settings.general.displayLanguage')">
+                <el-select v-model="language" :placeholder="t('settings.general.displayLanguage')" >
                     <el-option
                         v-for="lang in languages"
                         :key="lang.value"
@@ -18,10 +18,12 @@
 <script>
 import { useConfig } from '../../composables/useConfig'
 import { watch, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export default {
   setup() {
-    const { property: language, setProperty: setLanguage, getProperty: getLanguage } = useConfig('language', '')
+    const { t, locale } = useI18n()
+    const { property: language, setProperty: setLanguage } = useConfig('language', 'zh')
     console.log('初始语言设置：', language.value)
 
     const languages = ref([
@@ -34,10 +36,12 @@ export default {
       console.log('当前选择的语言：', newValue)
       if (newValue) {
         setLanguage(newValue)
+        locale.value = newValue // 更新 i18n 的语言设置
       }
     })
 
     return {
+      t,
       language,
       languages
     }
@@ -47,7 +51,11 @@ export default {
 
 <style scoped>
 .settings-form {
-    max-width: 500px;
+    max-width: 600px;
     margin: 20px auto;
+}
+
+.el-form-item {
+    margin-bottom: 20px;
 }
 </style>

@@ -4,11 +4,11 @@
       <div class="bg-white p-2">
         <div class="flex items-center gap-2 mb-4">
           <el-icon class="text-lg text-primary"><Pointer /></el-icon>
-          <h3 class="m-0 text-[15px] font-medium text-gray-800">选中解释快捷键</h3>
+          <h3 class="m-0 text-[15px] font-medium text-gray-800">{{ t('settings.shortcut.selectionShortcut') }}</h3>
         </div>
         <el-input
           v-model="selectionTranslate"
-          placeholder="点击输入快捷键"
+          :placeholder="t('settings.shortcut.clickToInput')"
           @keydown="(e) => keyDown(e, setSelectionTranslate)"
           @focus="() => handleFocus(selectionTranslate, setSelectionTranslate)"
         >
@@ -18,7 +18,7 @@
               v-if="selectionTranslate"
               @click="registerHandler('hotkey_selection_get', selectionTranslate)"
             >
-              保存
+              {{ t('settings.shortcut.save') }}
             </el-button>
           </template>
         </el-input>
@@ -27,11 +27,11 @@
       <div class="bg-white p-2">
         <div class="flex items-center gap-2 mb-4">
           <el-icon class="text-lg text-primary"><Crop /></el-icon>
-          <h3 class="m-0 text-[15px] font-medium text-gray-800">截图解释快捷键</h3>
+          <h3 class="m-0 text-[15px] font-medium text-gray-800">{{ t('settings.shortcut.screenshotShortcut') }}</h3>
         </div>
         <el-input
           v-model="inputTranslate"
-          placeholder="点击输入快捷键"
+          :placeholder="t('settings.shortcut.clickToInput')"
           @keydown="(e) => keyDown(e, setInputTranslate)"
           @focus="() => handleFocus(inputTranslate, setInputTranslate)"
         >
@@ -41,7 +41,7 @@
               v-if="inputTranslate"
               @click="registerHandler('hotkey_input_translate', inputTranslate)"
             >
-              保存
+              {{ t('settings.shortcut.save') }}
             </el-button>
           </template>
         </el-input>
@@ -56,6 +56,9 @@ import { unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut'
 import { ElMessage } from 'element-plus'
 import { invoke } from '@tauri-apps/api/core'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const { Pointer, Crop } = ElementPlusIconsVue
 
 const keyMap = {
