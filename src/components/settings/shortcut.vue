@@ -1,10 +1,10 @@
 <template>
   <div class="w-full">
     <div class="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
-      <div class="bg-white p-5">
+      <div class="bg-white p-2">
         <div class="flex items-center gap-2 mb-4">
-          <el-icon class="text-lg text-primary"><Mouse /></el-icon>
-          <h3 class="m-0 text-[15px] font-medium text-gray-800">选中翻译快捷键</h3>
+          <el-icon class="text-lg text-primary"><Pointer /></el-icon>
+          <h3 class="m-0 text-[15px] font-medium text-gray-800">选中解释快捷键</h3>
         </div>
         <el-input
           v-model="selectionTranslate"
@@ -24,10 +24,10 @@
         </el-input>
       </div>
 
-      <div class="bg-white p-5">
-        <div class="flex items-center gap-1 mb-4">
-          <el-icon class="text-lg text-primary"><Keyboard /></el-icon>
-          <h3 class="m-0 text-[15px] font-medium text-gray-800">输入翻译快捷键</h3>
+      <div class="bg-white p-2">
+        <div class="flex items-center gap-2 mb-4">
+          <el-icon class="text-lg text-primary"><Crop /></el-icon>
+          <h3 class="m-0 text-[15px] font-medium text-gray-800">截图解释快捷键</h3>
         </div>
         <el-input
           v-model="inputTranslate"
@@ -56,7 +56,7 @@ import { unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut'
 import { ElMessage } from 'element-plus'
 import { invoke } from '@tauri-apps/api/core'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-const { Mouse, Keyboard } = ElementPlusIconsVue
+const { Pointer, Crop } = ElementPlusIconsVue
 
 const keyMap = {
   Backquote: '`',

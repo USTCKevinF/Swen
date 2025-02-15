@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
-import { initStore } from './utils/store'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 const router = useRouter()
 
