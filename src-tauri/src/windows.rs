@@ -1,10 +1,13 @@
 // use crate::config::get;
 // use crate::config::set;
+use crate::StringWrapper;
 use crate::APP;
 use log::{info, warn};
 use tauri::Manager;
 use tauri::Monitor;
 use tauri::WebviewWindow;
+use tauri::{AppHandle, Emitter};
+use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
 
 // Get monitor where the mouse is currently located
 // Get daemon window instance
@@ -69,6 +72,7 @@ fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
         Some(v) => {
             info!("Window existence: {}", label);
             v.set_focus().unwrap();
+            v.show().unwrap();
             (v, true)
         }
         None => {
@@ -118,4 +122,30 @@ pub fn home_window() {
     window.set_size(tauri::LogicalSize::new(300, 500)).unwrap();
     window.center().unwrap();
     window.set_always_on_top(true).unwrap();
+}
+
+pub fn selection_get(
+    app_handle: &AppHandle,
+    _shortcut: &Shortcut,
+    event: ShortcutEvent,
+) {
+    match event.state() {
+        ShortcutState::Pressed => {
+            use selection::get_text;
+            let text = get_text();
+            if !text.trim().is_empty() {
+                let state: tauri::State<StringWrapper> = app_handle.state();
+                state.0.lock().unwrap().replace_range(.., &text);
+                info!("Selected text: {}", text);
+                app_handle.emit_to("home", "update-input", text).unwrap();
+            } else {
+                warn!("获取选中文本失败: 没有选中文本");
+            }
+            home_window();
+        }
+        ShortcutState::Released => {
+            // 按键释放时不执行任何操作
+            info!("Shortcut released");
+        }
+    }
 }

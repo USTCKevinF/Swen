@@ -44,7 +44,10 @@
             "store:allow-load",
             "store:default",
             "fs:default",
-            "fs:allow-app-read"
+            "fs:allow-app-read",
+            "global-shortcut:allow-is-registered",
+            "global-shortcut:allow-register",
+            "global-shortcut:allow-unregister"
           ]
         }
       ]

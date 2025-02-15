@@ -9,19 +9,30 @@ const inputText = ref("");
 const currentWindow = getCurrentWindow();
 let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 let unlisten: any = null;
+let unlistenInput: any = null;
+let isWindowFullyShown = false;
 
 // 监听失去焦点事件
 const listenBlur = async () => {
   unlisten = await listen('tauri://blur', () => {
     if (currentWindow.label === 'home') {
+      // 增加一个标志位，避免窗口刚显示就关闭
+      if (isWindowFullyShown) {  
         if (blurTimeout) {
-            clearTimeout(blurTimeout);
+          clearTimeout(blurTimeout);
         }
-        // 100ms延迟关闭窗口，避免拖动窗口时误关闭
         blurTimeout = setTimeout(async () => {
-            await currentWindow.close();
+          await currentWindow.hide();
         }, 100);
+      }
     }
+  });
+};
+
+// 监听后端发送的文本更新事件
+const listenInputUpdate = async () => {
+  unlistenInput = await listen('update-input', (event: any) => {
+    inputText.value = event.payload as string;
   });
 };
 
@@ -29,6 +40,7 @@ onMounted(async () => {
   try {
     currentWindow.show();
     await listenBlur();
+    await listenInputUpdate();
     
     // 监听获得焦点事件，取消关闭计时
     await listen('tauri://focus', () => {
@@ -43,6 +55,8 @@ onMounted(async () => {
         clearTimeout(blurTimeout);
       }
     });
+
+    isWindowFullyShown = true;
   } catch (err) {
     console.error(err)
   }
@@ -52,6 +66,9 @@ onMounted(async () => {
 onUnmounted(() => {
   if (unlisten) {
     unlisten();
+  }
+  if (unlistenInput) {
+    unlistenInput();
   }
 });
 </script>
