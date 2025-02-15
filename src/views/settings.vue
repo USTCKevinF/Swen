@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { getCurrentWebviewWindow} from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { onMounted, ref } from 'vue';
 import General from '../components/settings/general.vue';
@@ -9,7 +8,6 @@ import About from '../components/settings/about.vue';
 import Funding from '../components/settings/funding.vue';
 import { Setting, Operation, Monitor, InfoFilled, MilkTea } from '@element-plus/icons-vue'
 
-const webviewWindow = getCurrentWebviewWindow();
 const currentWindow = getCurrentWindow();
 
 const currentComponent = ref('General');
@@ -23,8 +21,6 @@ const switchComponent = (componentName: string, index: string) => {
 onMounted(async () => {
   try {
     currentWindow.show();
-    // 使用 dialog 显示信息
-    console.log(webviewWindow.label)
   } catch (err) {
     console.error(err)
   }

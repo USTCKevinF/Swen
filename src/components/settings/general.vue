@@ -2,7 +2,7 @@
     <div>
         <el-form label-width="120px" class="settings-form">
             <el-form-item label="显示语言">
-                <el-select v-model="selectedLanguage" placeholder="请选择语言" @change="handleLanguageChange">
+                <el-select v-model="language" placeholder="请选择语言" >
                     <el-option
                         v-for="lang in languages"
                         :key="lang.value"
@@ -16,33 +16,32 @@
 </template>
 
 <script>
-import { store } from '../../utils/store'
+import { useConfig } from '../../composables/useConfig'
+import { watch, ref } from 'vue'
 
 export default {
-    data() {
-        return {
-            selectedLanguage: 'zh',
-            languages: [
-                { value: 'zh', label: '中文' },
-                { value: 'en', label: 'English' }
-            ]
-        }
-    },
-    async created() {
-        // 从 store 中读取语言设置
-        const lang = await store?.get('language') || 'zh'
-        this.selectedLanguage = lang
-    },
-    methods: {
-        async handleLanguageChange(newValue) {
-            if (store) {
-                // 将新的语言设置保存到 store
-                await store.set('language', newValue)
-                await store.save()
-                console.log('语言已切换并保存至 store:', newValue)
-            }
-        }
+  setup() {
+    const { property: language, setProperty: setLanguage, getProperty: getLanguage } = useConfig('language', '')
+    console.log('初始语言设置：', language.value)
+
+    const languages = ref([
+      { value: 'zh', label: '中文' },
+      { value: 'en', label: 'English' }
+    ])
+
+    // 监听语言变化
+    watch(language, (newValue) => {
+      console.log('当前选择的语言：', newValue)
+      if (newValue) {
+        setLanguage(newValue)
+      }
+    })
+
+    return {
+      language,
+      languages
     }
+  }
 }
 </script>
 
