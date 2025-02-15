@@ -24,7 +24,6 @@ const updateRouteByLabel = (label: string) => {
 
 onMounted(async () => {
   try {
-    await initStore()
     appWindow = await getCurrentWebviewWindow()
     // 设置初始路由
     updateRouteByLabel(appWindow.label)
