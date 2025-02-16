@@ -69,7 +69,7 @@ const { property: rememberSize, setProperty: setRememberSize } = useConfig('reme
 const { property: alwaysOnTop, setProperty: setAlwaysOnTop } = useConfig('alwaysOnTop', true)
 
 // 监听语言变化
-watch(language, (newValue) => {
+watch(language, (newValue: string) => {
   console.log('当前选择的语言：', newValue)
   if (newValue) {
     setLanguage(newValue)
@@ -78,19 +78,19 @@ watch(language, (newValue) => {
 })
 
 // 监听窗口位置变化
-watch(windowPosition, (newValue) => {
+watch(windowPosition, (newValue: string) => {
   if (newValue) {
     setWindowPosition(newValue)
   }
 })
 
 // 监听记住窗口大小设置变化
-watch(rememberSize, (newValue) => {
+watch(rememberSize, (newValue: boolean) => {
   setRememberSize(newValue)
 })
 
 // 监听窗口置顶设置变化
-watch(alwaysOnTop, (newValue) => {
+watch(alwaysOnTop, (newValue: boolean) => {
   setAlwaysOnTop(newValue)
 })
 </script>

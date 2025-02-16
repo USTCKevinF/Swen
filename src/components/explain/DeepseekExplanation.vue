@@ -1,75 +1,3 @@
-<script setup lang="ts">
-import { ref } from "vue";
-import OpenAI from "openai";
-import { MdPreview } from 'md-editor-v3';
-import 'md-editor-v3/lib/preview.css';
-import ArrowIcon from '../../assets/arrow.svg';
-import CopyIcon from '../../assets/copy.svg';
-import RedoIcon from '../../assets/redo.svg';
-import { ElMessage } from 'element-plus'
-
-const props = defineProps<{
-  inputText: string
-}>();
-
-const deepseekResponse = ref("");
-const isLoading = ref(false);
-
-const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: 'sk-258b756def1b41dab057106a0998f1ff',
-  dangerouslyAllowBrowser: true
-});
-
-async function getDeepseekExplanation() {
-  if (!props.inputText.trim()) return;
-  
-  isLoading.value = true;
-  deepseekResponse.value = "";
-  
-  try {
-    const completion = await openai.chat.completions.create({
-      messages: [
-        { role: "system", content: "You are a helpful assistant.Please use $ instead of \\( and \\) for LaTeX math expressions. " },
-        { role: "user", content: props.inputText }
-      ],
-      model: "deepseek-chat",
-      stream: true,
-    });
-    
-    for await (const chunk of completion) {
-      let content = chunk.choices[0]?.delta?.content || "";
-      deepseekResponse.value += content;
-    }
-  } catch (error) {
-    console.error('DeepSeek API 调用失败:', error);
-    deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-async function copyToClipboard() {
-  try {
-    await navigator.clipboard.writeText(deepseekResponse.value);
-    ElMessage({
-      message: '复制成功',
-      type: 'success',
-    });
-  } catch (err) {
-    console.error('复制失败:', err);
-    ElMessage({
-      message: '复制失败',
-      type: 'error',
-    });
-  }
-}
-
-function handleRedo() {
-  getDeepseekExplanation();
-}
-</script>
-
 <template>
   <div class="option-item">
     <div class="option-header" @click="getDeepseekExplanation">
@@ -110,6 +38,108 @@ function handleRedo() {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, watch } from "vue";
+import OpenAI from "openai";
+import { MdPreview } from 'md-editor-v3';
+import 'md-editor-v3/lib/preview.css';
+import ArrowIcon from '../../assets/arrow.svg';
+import CopyIcon from '../../assets/copy.svg';
+import RedoIcon from '../../assets/redo.svg';
+import { ElMessage } from 'element-plus'
+import { useConfig } from '../../composables/useConfig'
+
+const props = defineProps<{
+  inputText: string
+}>();
+
+const deepseekResponse = ref("");
+const isLoading = ref(false);
+
+
+const { property: baseURL, setProperty: setBaseURL } = useConfig('llm.baseURL', 'https://api.siliconflow.cn/v1')
+const { property: apiKey, setProperty: setApiKey } = useConfig('llm.apiKey', '')
+const { property: model, setProperty: setModel } = useConfig('llm.model', 'deepseek-ai/DeepSeek-V3')
+
+let openai = new OpenAI({
+  baseURL: baseURL.value,
+  apiKey: apiKey.value,
+  dangerouslyAllowBrowser: true
+});
+
+// 监听配置变化时重新创建实例
+watch([baseURL, apiKey], (newValues: [string, string]) => {
+  const [newBaseURL, newApiKey] = newValues;
+  openai = new OpenAI({
+    baseURL: newBaseURL,
+    apiKey: newApiKey,
+    dangerouslyAllowBrowser: true
+  });
+});
+
+async function getDeepseekExplanation() {
+  if (!props.inputText.trim()) return;
+  
+  isLoading.value = true;
+  deepseekResponse.value = "";
+  let systemPrompt = "你是一个包罗万象的知识专家，擅长于给用户解释其提出的概念，用户是一名好学且好奇的学生，会提供一些名词或者概念给你。规则：- 你需要详细地解答，并且以易懂的方式叙述你的观点 - 你的目标是让用户更深入的理解其提供的概念 - 无论用户提供的是什么语言，均用中文进行回复 - 输出完解释之后立刻停止，不要说类似如果你有更多的问题，欢迎继续提问的话.Please use $ instead of \\( and \\) for LaTeX math expressions.";
+
+  try {
+    const completion = await openai.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: props.inputText }
+      ],
+      model: model.value,
+      stream: true,
+    });
+    
+    for await (const chunk of completion) {
+      let content = chunk.choices[0]?.delta?.content || "";
+      deepseekResponse.value += content;
+    }
+  } catch (error) {
+    console.error('DeepSeek API 调用失败:', error);
+    deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function copyToClipboard() {
+  try {
+    await navigator.clipboard.writeText(deepseekResponse.value);
+    ElMessage({
+      message: '复制成功',
+      type: 'success',
+    });
+  } catch (err) {
+    console.error('复制失败:', err);
+    ElMessage({
+      message: '复制失败',
+      type: 'error',
+    });
+  }
+}
+
+function handleRedo() {
+  getDeepseekExplanation();
+}
+
+// 监听变化并保存
+watch(baseURL, (newValue: string) => {
+    setBaseURL(newValue)
+})
+
+watch(apiKey, (newValue: string) => {
+    setApiKey(newValue)
+})
+
+watch(model, (newValue: string) => {
+    setModel(newValue)
+})
+</script>
 
 <style scoped>
 .copy-button {

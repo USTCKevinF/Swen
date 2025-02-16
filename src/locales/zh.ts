@@ -19,7 +19,7 @@ export default {
       clickToInput: '点击输入快捷键'
     },
     model: {
-      title: '模型设置'
+      title: '大模型设置'
     },
     about: {
       title: '关于应用'
