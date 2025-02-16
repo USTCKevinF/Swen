@@ -82,7 +82,7 @@ const componentMap = {
         </el-aside> 
         <el-main class="bg-gray-50 p-8">
           <h2 class="text-xl font-medium mb-6">{{ getPageTitle() }}</h2>
-          <div class="bg-white rounded-lg p-6 shadow-sm">
+          <div class="bg-white rounded-lg p-6 pl-12 shadow-sm">
             <component :is="componentMap[currentComponent]" />
           </div>
         </el-main>
