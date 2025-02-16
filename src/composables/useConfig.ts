@@ -3,10 +3,13 @@ import { emit, listen } from '@tauri-apps/api/event'
 import { store } from '../utils/store'
 import { useGetState } from './useGetState'
 import { debounce } from '../utils/debounce'
+import { ref } from 'vue'
 
 export function useConfig(key: string, defaultValue: any, options = { sync: true }) {
   const [property, setPropertyState, getProperty] = useGetState(null)
   const { sync = true } = options
+  const isLoaded = ref(false)
+
   // 同步到 Store (State -> Store)
   const syncToStore = debounce(async (value: any) => {
     try {
@@ -24,11 +27,10 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
   // 同步到 State (Store -> State) 
   const syncToState = async (value: any) => {
     if (value !== null) {
-        console.log('storeValue:', value)
-        setPropertyState(value)
+      setPropertyState(value)
+      isLoaded.value = true
     } else {
       try {
-        console.log('null storeValue:', defaultValue)
         const storeValue = await store.get(key)
         if (storeValue === null) {
           setPropertyState(defaultValue)
@@ -37,6 +39,7 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
         } else {
           setPropertyState(storeValue)
         }
+        isLoaded.value = true
       } catch (err) {
         console.error('Failed to sync from store:', err)
       }
@@ -69,7 +72,8 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
   return {
     property,
     setProperty,
-    getProperty
+    getProperty,
+    isLoaded
   }
 }
 

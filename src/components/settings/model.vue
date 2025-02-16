@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useConfig } from '../../composables/useConfig'
 import { fetch } from '@tauri-apps/plugin-http'
 import { ElMessage } from 'element-plus'
@@ -78,9 +78,9 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
-const { property: baseURL, setProperty: setBaseURL } = useConfig('llm.baseURL', '')
-const { property: apiKey, setProperty: setApiKey } = useConfig('llm.apiKey', '')
-const { property: model, setProperty: setModel } = useConfig('llm.model', '')
+const { property: baseURL, setProperty: setBaseURL, isLoaded: isBaseURLLoaded } = useConfig('llm.baseURL', '')
+const { property: apiKey, setProperty: setApiKey, isLoaded: isApiKeyLoaded } = useConfig('llm.apiKey', '')
+const { property: model, setProperty: setModel, isLoaded: isModelLoaded } = useConfig('llm.model', '')
 
 // 新增测试相关状态
 const testInput = ref(t('settings.model.testInput'))
@@ -88,18 +88,28 @@ const testOutput = ref('')
 const isConnected = ref(false)
 const isTesting = ref(false)
 
-// 替换原来的 92-94 行
 const originalBaseURL = ref('')
 const originalApiKey = ref('')
 const originalModel = ref('')
 
-onMounted(() => {
+onMounted(async () => {
   // 等待配置加载完成
-  setTimeout(() => {
-    originalBaseURL.value = baseURL.value
-    originalApiKey.value = apiKey.value
-    originalModel.value = model.value
-  }, 100)
+  await new Promise(resolve => {
+    const check = () => {
+      if (baseURL.value !== undefined && 
+          apiKey.value !== undefined && 
+          model.value !== undefined) {
+        resolve(true)
+      } else {
+        setTimeout(check, 50)
+      }
+    }
+    check()
+  })
+  
+  originalBaseURL.value = baseURL.value
+  originalApiKey.value = apiKey.value
+  originalModel.value = model.value
 })
 
 // 添加计算属性检查设置是否有变动
@@ -169,6 +179,20 @@ const resetSettings = () => {
     model.value = originalModel.value
     ElMessage.info(t('settings.model.cancelChanges'))
 }
+
+const allConfigLoaded = computed(() => 
+  isBaseURLLoaded.value && 
+  isApiKeyLoaded.value && 
+  isModelLoaded.value
+)
+
+watch(allConfigLoaded, (loaded: boolean) => {
+  if (loaded) {
+    originalBaseURL.value = baseURL.value
+    originalApiKey.value = apiKey.value
+    originalModel.value = model.value
+  }
+})
 </script>
 
 <style scoped>

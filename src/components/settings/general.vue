@@ -31,20 +31,22 @@
                 </el-select>
             </el-form-item>
 
-            <el-form-item :label="t('settings.general.rememberSize')">
-                <el-switch v-model="rememberSize" />
-            </el-form-item>
+            <template v-if="isConfigLoaded">
+                <el-form-item :label="t('settings.general.rememberSize')">
+                    <el-switch v-model="rememberSize" />
+                </el-form-item>
 
-            <el-form-item :label="t('settings.general.alwaysOnTop')">
-                <el-switch v-model="alwaysOnTop" />
-            </el-form-item>
+                <el-form-item :label="t('settings.general.alwaysOnTop')">
+                    <el-switch v-model="alwaysOnTop" />
+                </el-form-item>
+            </template>
         </el-form>
     </div>
 </template>
 
 <script setup lang="ts">
 import { useConfig } from '../../composables/useConfig'
-import { watch, ref } from 'vue'
+import { watch, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import 'flag-icons/css/flag-icons.min.css'
 import { LanguageFlag } from '../../utils/language'
@@ -65,8 +67,13 @@ const windowPositions = ref([
 ])
 
 const { property: windowPosition, setProperty: setWindowPosition } = useConfig('windowPosition', 'center')
-const { property: rememberSize, setProperty: setRememberSize } = useConfig('rememberSize', false)
-const { property: alwaysOnTop, setProperty: setAlwaysOnTop } = useConfig('alwaysOnTop', true)
+const { property: rememberSize, setProperty: setRememberSize, isLoaded: isRememberSizeLoaded } = useConfig('rememberSize', false)
+const { property: alwaysOnTop, setProperty: setAlwaysOnTop, isLoaded: isAlwaysOnTopLoaded } = useConfig('alwaysOnTop', true)
+
+// 添加一个计算属性来检查所有配置是否都已加载完成
+const isConfigLoaded = computed(() => 
+    isRememberSizeLoaded.value && isAlwaysOnTopLoaded.value
+)
 
 // 监听语言变化
 watch(language, (newValue: string) => {
