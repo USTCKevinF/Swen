@@ -19,7 +19,19 @@ export default {
       clickToInput: 'Click to input shortcut'
     },
     model: {
-      title: 'Model Settings'
+      title: 'Model Settings',
+      baseURL: 'Base URL',
+      apiKey: 'API Key',
+      modelName: 'Model Name',
+      testConnection: 'Test Connection',
+      testInput: 'What LLM are you?',
+      testButton: 'Test Connection',
+      connectionSuccess: 'Connection Successful',
+      connectionFailed: 'Connection Failed',
+      save: 'Save',
+      cancel: 'Cancel',
+      saveSuccess: 'Settings Saved',
+      cancelChanges: 'Changes Cancelled'
     },
     about: {
       title: 'About'

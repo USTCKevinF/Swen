@@ -19,7 +19,19 @@ export default {
       clickToInput: '点击输入快捷键'
     },
     model: {
-      title: '大模型设置'
+      title: '大模型设置',
+      baseURL: 'Base URL',
+      apiKey: 'API 密钥',
+      modelName: '模型名称',
+      testConnection: '测试模型连通',
+      testInput: '你是什么模型？',
+      testButton: '测试连接',
+      connectionSuccess: '连接成功',
+      connectionFailed: '连接失败',
+      save: '保存',
+      cancel: '取消',
+      saveSuccess: '设置已保存',
+      cancelChanges: '已取消修改'
     },
     about: {
       title: '关于应用'

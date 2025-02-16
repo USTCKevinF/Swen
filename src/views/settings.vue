@@ -54,7 +54,7 @@ const componentMap = {
     <el-container class="h-full">
       <el-header class="h-9 bg-[#f7f6f6] " data-tauri-drag-region='true'></el-header>
       <el-container>
-        <el-aside class="w-[240px] border-r border-gray-100 bg-white overflow-hidden">
+        <el-aside class="w-[240px] border-r border-gray-100 bg-white overflow-hidden fixed-aside">
           <div class="py-4 px-4 font-medium text-gray-400 text-sm">{{ t('settings.title') }}</div>
           <el-menu class="h-full !border-0" :default-active="activeIndex">
             <el-menu-item index="1" @click="switchComponent('General', '1')" class="menu-item">
@@ -80,7 +80,7 @@ const componentMap = {
             </el-menu-item>
           </el-menu>
         </el-aside> 
-        <el-main class="bg-gray-50 p-8">
+        <el-main class="bg-gray-50 p-8 scrollable-main">
           <h2 class="text-xl font-medium mb-6">{{ getPageTitle() }}</h2>
           <div class="bg-white rounded-lg p-6 pl-12 shadow-sm">
             <component :is="componentMap[currentComponent]" />
@@ -147,5 +147,18 @@ const componentMap = {
 
 :deep(.el-main) {
   --el-main-padding: 32px;
+}
+
+.fixed-aside {
+  position: fixed;
+  top: 36px;
+  bottom: 0;
+  left: 0;
+}
+
+.scrollable-main {
+  margin-left: 240px;
+  overflow-y: auto;
+  height: calc(100vh - 36px);
 }
 </style>

@@ -3,11 +3,11 @@ mod config;
 mod hotkey;
 mod tray;
 mod windows;
+use hotkey::init_register_shortcut;
 use log::info;
 use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 use tauri::Manager;
-use hotkey::init_register_shortcut;
 pub struct StringWrapper(pub Mutex<String>);
 // Global AppHandle
 pub static APP: OnceCell<tauri::AppHandle> = OnceCell::new();
@@ -15,6 +15,7 @@ pub static APP: OnceCell<tauri::AppHandle> = OnceCell::new();
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_log::Builder::new().build())

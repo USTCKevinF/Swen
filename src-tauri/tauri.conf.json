@@ -5,7 +5,7 @@
   "identifier": "com.yysm_tool.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1422",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
@@ -25,10 +25,14 @@
       "capabilities": [
         {
           "identifier": "custom-permision",
-          "windows": [
-            "*"
-          ],
+          "windows": ["*"],
+          "platforms": ["linux", "macOS", "windows"],
           "permissions": [
+            {
+              "identifier": "http:default",
+              "allow": [{ "url": "https://**" }],
+              "deny": [{ "url": "https://private.tauri.app" }]
+            },
             "core:window:allow-create",
             "core:window:allow-close",
             "core:webview:allow-create-webview",
@@ -47,7 +51,9 @@
             "fs:allow-app-read",
             "global-shortcut:allow-is-registered",
             "global-shortcut:allow-register",
-            "global-shortcut:allow-unregister"
+            "global-shortcut:allow-unregister",
+            "http:allow-fetch",
+            "http:default"
           ]
         }
       ]

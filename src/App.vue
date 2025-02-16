@@ -56,4 +56,7 @@ onMounted(async () => {
 html, body {
   height: 100%;
 }
+.common-layout {
+  user-select: none;
+}
 </style>

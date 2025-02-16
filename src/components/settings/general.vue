@@ -129,11 +129,6 @@ watch(alwaysOnTop, (newValue: boolean) => {
     font-size: 14px;
 }
 
-/* .fi {
-    width: 1.2em;
-    height: 1.2em;
-    border-radius: 2px;
-} */
 
 :deep(.el-select-dropdown__item) {
     padding: 0 20px;
