@@ -3,7 +3,13 @@ export default {
     title: 'Settings',
     general: {
       title: 'General Settings',
-      displayLanguage: 'Display Language'
+      displayLanguage: 'Display Language',
+    windowPosition: 'Window Position',
+      followMouse: 'Follow Mouse',
+      center: 'Center Screen',
+      remember: 'Remember Position',
+      rememberSize: 'Remember Window Size',
+      alwaysOnTop: 'Always on Top'
     },
     shortcut: {
       title: 'Shortcut Settings',
