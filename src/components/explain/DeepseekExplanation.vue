@@ -6,7 +6,7 @@
         <span class="loading-icon" v-if="isLoading">
           <span class="spinner"></span>
         </span>
-        <img v-else :src="ArrowIcon" class="arrow" alt="arrow" />
+        <el-icon v-else class="arrow"><ArrowRight /></el-icon>
       </div>
     </div>
     <div v-if="deepseekResponse" class="flex flex-col gap-2.5">
@@ -17,21 +17,17 @@
       />
       <div v-if="!isLoading" class="relative flex items-center gap-2.5 pl-3.5 pb-2.5">
         <div class="relative inline-block">
-          <img 
-            :src="CopyIcon" 
-            alt="copy" 
+          <el-icon 
             @click="copyToClipboard"
             class="w-5 h-5 cursor-pointer opacity-90 hover:opacity-100"
-          />
+          ><DocumentCopy /></el-icon>
           <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">复制</span>
         </div>
         <div class="relative inline-block">
-          <img 
-            :src="RedoIcon" 
-            alt="redo" 
+          <el-icon 
             @click="handleRedo"
             class="w-5 h-5 cursor-pointer opacity-90 hover:opacity-100"
-          />
+          ><RefreshRight /></el-icon>
           <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">重新生成</span>
         </div>
       </div>
@@ -43,9 +39,7 @@
 import { ref } from "vue";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
-import ArrowIcon from '../../assets/arrow.svg';
-import CopyIcon from '../../assets/copy.svg';
-import RedoIcon from '../../assets/redo.svg';
+import { ArrowRight, DocumentCopy, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
