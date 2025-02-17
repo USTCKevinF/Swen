@@ -74,10 +74,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-full rounded-lg bg-transparent backdrop-blur-sm">
-    <el-container>
-      <el-header class="h-8" data-tauri-drag-region='true'></el-header>
-      <el-main class="p-3">
+  <div class="h-full rounded-lg backdrop-blur-sm relative">
+    <el-container class="h-full">
+      <el-header class="h-8 bg-white fixed top-0 left-0 right-0 z-10" data-tauri-drag-region='true'></el-header>
+      <el-main class="p-3 mt-8 overflow-y-auto">
         <el-input
             v-model="inputText"
             class="w-full text-sm outline-none mb-2"
@@ -96,13 +96,19 @@ onUnmounted(() => {
 :global(body) {
   background: transparent;
   height: 100vh;
+  overflow: hidden;
 }
 
 .md-editor-preview-wrapper {
   @apply relative flex-1 box-border overflow-auto px-4;
 }
+
 .md-editor-preview {
   @apply text-sm break-all overflow-hidden;
+}
+
+.md-editor-preview ol, .md-editor-preview ul {
+  @apply pl-3;
 }
 
 .options-section {
@@ -114,7 +120,7 @@ onUnmounted(() => {
 }
 
 .option-header {
-  @apply text-sm py-2 px-4 flex justify-between items-center bg-[#ededed] cursor-pointer;
+  @apply text-sm py-2 px-3 flex justify-between items-center bg-[#ededed] cursor-pointer;
 }
 
 .arrow {
