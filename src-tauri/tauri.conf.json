@@ -5,22 +5,61 @@
   "identifier": "com.yysm_tool.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1422",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "yysm_tool",
-        "width": 800,
-        "height": 600
+        "title": "Daemon",
+        "label": "daemon",
+        "visible": false,
+        "additionalBrowserArgs": "--disable-web-security",
+        "useHttpsScheme": true,
+        "url": "daemon.html"
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": [
+        {
+          "identifier": "custom-permision",
+          "windows": ["*"],
+          "platforms": ["linux", "macOS", "windows"],
+          "permissions": [
+            {
+              "identifier": "http:default",
+              "allow": [{ "url": "https://**" }],
+              "deny": [{ "url": "https://private.tauri.app" }]
+            },
+            "core:window:allow-create",
+            "core:window:allow-close",
+            "core:webview:allow-create-webview",
+            "core:webview:allow-webview-close",
+            "core:webview:allow-create-webview-window",
+            "core:window:allow-hide",
+            "core:window:allow-show",
+            "core:window:allow-start-dragging",
+            "core:event:default",
+            "core:event:allow-listen",
+            "core:path:allow-resolve-directory",
+            "core:path:default",
+            "store:allow-load",
+            "store:default",
+            "fs:default",
+            "fs:allow-app-read",
+            "global-shortcut:allow-is-registered",
+            "global-shortcut:allow-register",
+            "global-shortcut:allow-unregister",
+            "http:allow-fetch",
+            "http:default"
+          ]
+        }
+      ]
     }
   },
+  
   "bundle": {
     "active": true,
     "targets": "all",
