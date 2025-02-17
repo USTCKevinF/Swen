@@ -6513,6 +6513,7 @@ dependencies = [
  "arboard",
  "clipboard-win",
  "dirs",
+ "futures-util",
  "log",
  "macos-accessibility-client",
  "mouse_position",

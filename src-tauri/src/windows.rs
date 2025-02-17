@@ -124,11 +124,7 @@ pub fn home_window() {
     window.set_always_on_top(true).unwrap();
 }
 
-pub fn selection_get(
-    app_handle: &AppHandle,
-    _shortcut: &Shortcut,
-    event: ShortcutEvent,
-) {
+pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
     match event.state() {
         ShortcutState::Pressed => {
             use selection::get_text;

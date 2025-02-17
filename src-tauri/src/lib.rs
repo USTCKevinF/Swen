@@ -3,6 +3,7 @@ mod config;
 mod hotkey;
 mod tray;
 mod windows;
+mod llm;
 use hotkey::init_register_shortcut;
 use log::info;
 use once_cell::sync::OnceCell;
@@ -54,6 +55,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             config::reload_store,
             hotkey::register_shortcut_by_frontend,
+            llm::receive_stream,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
