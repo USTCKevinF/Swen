@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import { ArrowRight, DocumentCopy, RefreshRight } from '@element-plus/icons-vue'
@@ -52,13 +52,14 @@ const props = defineProps<{
 const deepseekResponse = ref("");
 const isLoading = ref(false);
 
+let unlistenInput: any = null;
 
 const { property: baseURL } = useConfig('llm.baseURL', '')
 const { property: apiKey } = useConfig('llm.apiKey', '')
 const { property: model } = useConfig('llm.model', '')
 
 async function getDeepseekExplanation() {
-  if (!props.inputText.trim()) return;
+  if (!props.inputText) return;
   
   isLoading.value = true;
   deepseekResponse.value = "";
@@ -139,6 +140,22 @@ async function copyToClipboard() {
 function handleRedo() {
   getDeepseekExplanation();
 }
+
+const listenInputUpdate = async () => {
+  unlistenInput = await listen('update-input', () => {
+    deepseekResponse.value = ""; // 清空之前的解释内容
+  });
+};
+
+onMounted(async () => {
+  await listenInputUpdate();
+});
+
+onUnmounted(() => {
+  if (unlistenInput) {
+    unlistenInput();
+  }
+});
 </script>
 
 <style scoped>

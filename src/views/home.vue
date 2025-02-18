@@ -47,7 +47,7 @@ const handleFavoriteClick = () => {
 // 监听后端发送的文本更新事件
 const listenInputUpdate = async () => {
   unlistenInput = await listen('update-input', (event: any) => {
-    inputText.value = event.payload as string;
+    inputText.value = (event.payload as string).trim();
   });
 };
 
