@@ -4,6 +4,10 @@ import { onMounted, onUnmounted } from 'vue';
 import { listen } from '@tauri-apps/api/event';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { ElMessage } from 'element-plus';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+const StarFilled  = ElementPlusIconsVue
+const isFavorite = ref(false);
 
 const inputText = ref("");
 const currentWindow = getCurrentWindow();
@@ -11,13 +15,13 @@ let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 let unlisten: any = null;
 let unlistenInput: any = null;
 let isWindowFullyShown = false;
+const isPinned = ref(false);
 
 // 监听失去焦点事件
 const listenBlur = async () => {
   unlisten = await listen('tauri://blur', () => {
     if (currentWindow.label === 'home') {
-      // 增加一个标志位，避免窗口刚显示就关闭
-      if (isWindowFullyShown) {  
+      if (isWindowFullyShown && !isPinned.value) {
         if (blurTimeout) {
           clearTimeout(blurTimeout);
         }
@@ -26,6 +30,17 @@ const listenBlur = async () => {
         }, 100);
       }
     }
+  });
+};
+
+// 处理收藏点击事件
+const handleFavoriteClick = () => {
+  isFavorite.value = !isFavorite.value;
+  // TODO: 在此处添加实际的收藏/取消收藏逻辑
+  ElMessage({
+    message: isFavorite.value ? '收藏成功' : '已取消收藏',
+    type: isFavorite.value ? 'success' : 'info',
+    duration: 2000
   });
 };
 
@@ -71,12 +86,34 @@ onUnmounted(() => {
     unlistenInput();
   }
 });
+
+// 处理pin点击事件
+const handlePinClick = () => {
+  isPinned.value = !isPinned.value;
+};
 </script>
 
 <template>
-  <div class="h-full rounded-lg backdrop-blur-sm relative">
+  <div class="h-full rounded-lg backdrop-blur-sm relative bg-[#f9f9f9]">
     <el-container class="h-full">
-      <el-header class="h-8 bg-white fixed top-0 left-0 right-0 z-10" data-tauri-drag-region='true'></el-header>
+      <el-header class="h-10  fixed top-0 left-0 right-0 z-10 flex items-center justify-end px-2" data-tauri-drag-region='true'>
+        <div class="flex items-center gap-2">
+          <div class="cursor-pointer" @click="handleFavoriteClick">
+            <el-icon :class="[{ 'text-yellow-400': isFavorite }, 'star-icon']" :size="25">
+              <StarFilled/>
+            </el-icon>
+          </div>
+          <div class="cursor-pointer" @click="handlePinClick">
+            <img 
+              src= '../assets/pin.svg'
+              class="w-6 h-6"
+              :alt="isPinned ? 'Pinned' : 'Not Pinned'"
+              :title="isPinned ? '取消钉住窗口' : '钉住窗口'"
+              :class="{ 'pin-active': isPinned }"
+            />
+          </div>
+        </div>
+      </el-header>
       <el-main class="p-3 mt-8 overflow-y-auto">
         <el-input
             v-model="inputText"
@@ -97,6 +134,19 @@ onUnmounted(() => {
   background: transparent;
   height: 100vh;
   overflow: hidden;
+}
+
+.el-icon {
+  opacity: 0.4;
+  transition: all 0.15s ease;
+}
+
+.el-icon:hover {
+  opacity: 0.6;
+}
+
+.text-yellow-400 {
+  opacity: 0.8;
 }
 
 .md-editor-preview-wrapper {
@@ -132,7 +182,7 @@ onUnmounted(() => {
 }
 
 .custom-md-preview {
-  @apply w-full text-xs bg-gray-50;
+  @apply w-full text-xs bg-gray-100;
 }
 
 .katex-error {
@@ -155,5 +205,48 @@ onUnmounted(() => {
   @apply px-3 py-1 bg-gray-50 border border-gray-300 rounded-lg cursor-pointer text-sm text-gray-600
          hover:bg-gray-100 hover:border-gray-400 active:bg-gray-200 active:translate-y-px
          flex items-center justify-center min-w-[80px] h-7 transition-all duration-200;
+}
+
+.el-header {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+img {
+  opacity: 0.4;
+  transition: all 0.15s ease;
+}
+
+.pin-active {
+  filter: invert(40%) sepia(60%) saturate(1000%) hue-rotate(190deg) brightness(100%) contrast(100%);
+  transform: rotate(45deg);
+  opacity: 0.8;
+}
+
+.star-icon {
+  opacity: 0.2;
+  transition: all 0.15s ease;
+}
+
+.star-icon.text-yellow-400 {
+  opacity: 0.8;
+  color: #facc15;
+}
+
+/* 添加以下样式来禁止选中 */
+.h-full {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 允许输入框内的文本可以选中 */
+.el-input textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
 }
 </style>

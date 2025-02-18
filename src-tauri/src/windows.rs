@@ -123,6 +123,7 @@ pub fn home_window() {
     window.set_size(tauri::LogicalSize::new(400, 500)).unwrap();
     window.center().unwrap();
     window.set_always_on_top(true).unwrap();
+    window.set_focus().unwrap();
     // window.set_transparent_titlebar(true, true);
 }
 

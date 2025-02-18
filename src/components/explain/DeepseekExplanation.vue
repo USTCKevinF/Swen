@@ -9,24 +9,24 @@
         <el-icon v-else class="arrow"><ArrowRight /></el-icon>
       </div>
     </div>
-    <div v-if="deepseekResponse" class="flex flex-col gap-2.5">
+    <div v-if="deepseekResponse" class="flex flex-col  selectable-text">
       <MdPreview 
         :modelValue="deepseekResponse"
         :preview-theme="'default'"
         class="custom-md-preview"
       />
-      <div v-if="!isLoading" class="relative flex items-center gap-2.5 pl-3.5 pb-2.5">
+      <div v-if="!isLoading" class="relative flex items-center gap-2.5 pl-3.5 pb-2.5 bg-gray-100">
         <div class="relative inline-block">
           <el-icon 
             @click="copyToClipboard"
-            class="w-5 h-5 cursor-pointer opacity-90 hover:opacity-100"
+            class="w-6 h-6 cursor-pointer opacity-90 hover:opacity-100"
           ><DocumentCopy /></el-icon>
           <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">复制</span>
         </div>
         <div class="relative inline-block">
           <el-icon 
             @click="handleRedo"
-            class="w-5 h-5 cursor-pointer opacity-90 hover:opacity-100"
+            class="w-6 h- cursor-pointer opacity-90 hover:opacity-100"
           ><RefreshRight /></el-icon>
           <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">重新生成</span>
         </div>
@@ -144,5 +144,12 @@ function handleRedo() {
 <style scoped>
 .copy-button {
   display: none;
+}
+
+.selectable-text {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
 }
 </style> 
