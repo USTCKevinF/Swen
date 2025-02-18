@@ -130,17 +130,23 @@ pub fn home_window() {
 pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
     match event.state() {
         ShortcutState::Pressed => {
-            use selection::get_text;
-            let text = get_text();
-            if !text.trim().is_empty() {
-                let state: tauri::State<StringWrapper> = app_handle.state();
-                state.0.lock().unwrap().replace_range(.., &text);
-                info!("Selected text: {}", text);
-                app_handle.emit_to("home", "update-input", text).unwrap();
-            } else {
-                warn!("获取选中文本失败: 没有选中文本");
+            use get_selected_text::get_selected_text;
+            match get_selected_text() {
+                Ok(text) => {
+                    if !text.trim().is_empty() {
+                        let state: tauri::State<StringWrapper> = app_handle.state();
+                        state.0.lock().unwrap().replace_range(.., &text);
+                        info!("Selected text: {}", text);
+                        app_handle.emit_to("home", "update-input", text).unwrap();
+                    } else {
+                        warn!("获取选中文本失败: 没有选中文本");
+                    }
+                    home_window();
+                },
+                Err(e) => {
+                    warn!("获取选中文本失败: 发生错误: {}", e);
+                }
             }
-            home_window();
         }
         ShortcutState::Released => {
             // 按键释放时不执行任何操作
