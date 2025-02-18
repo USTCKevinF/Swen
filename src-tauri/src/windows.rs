@@ -7,6 +7,7 @@ use tauri::Manager;
 use tauri::Monitor;
 use tauri::WebviewWindow;
 use tauri::{AppHandle, Emitter};
+use tauri::Runtime;
 use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
 
 // Get monitor where the mouse is currently located
@@ -122,6 +123,7 @@ pub fn home_window() {
     window.set_size(tauri::LogicalSize::new(400, 500)).unwrap();
     window.center().unwrap();
     window.set_always_on_top(true).unwrap();
+    // window.set_transparent_titlebar(true, true);
 }
 
 pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
@@ -142,6 +144,50 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
         ShortcutState::Released => {
             // 按键释放时不执行任何操作
             info!("Shortcut released");
+        }
+    }
+}
+
+use cocoa::appkit::{NSWindow, NSWindowStyleMask, NSWindowTitleVisibility};
+
+pub trait WindowExt {
+    #[cfg(target_os = "macos")]
+    fn set_transparent_titlebar(&self, title_transparent: bool, remove_toolbar: bool);
+}
+
+impl<R: Runtime> WindowExt for WebviewWindow<R> {
+    #[cfg(target_os = "macos")]
+    fn set_transparent_titlebar(&self, title_transparent: bool, remove_tool_bar: bool) {
+        unsafe {
+            let id = self.ns_window().unwrap() as cocoa::base::id;
+            NSWindow::setTitlebarAppearsTransparent_(id, cocoa::base::YES);
+            let mut style_mask = id.styleMask();
+            style_mask.set(
+                NSWindowStyleMask::NSFullSizeContentViewWindowMask,
+                title_transparent,
+            );
+
+            if remove_tool_bar {
+                style_mask.remove(
+                    NSWindowStyleMask::NSClosableWindowMask
+                        | NSWindowStyleMask::NSMiniaturizableWindowMask
+                        | NSWindowStyleMask::NSResizableWindowMask,
+                );
+            }
+
+            id.setStyleMask_(style_mask);
+
+            id.setTitleVisibility_(if title_transparent {
+                NSWindowTitleVisibility::NSWindowTitleHidden
+            } else {
+                NSWindowTitleVisibility::NSWindowTitleVisible
+            });
+
+            id.setTitlebarAppearsTransparent_(if title_transparent {
+                cocoa::base::YES
+            } else {
+                cocoa::base::NO
+            });
         }
     }
 }

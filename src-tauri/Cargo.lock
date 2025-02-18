@@ -6512,6 +6512,7 @@ version = "0.1.0"
 dependencies = [
  "arboard",
  "clipboard-win",
+ "cocoa 0.26.0",
  "dirs",
  "futures-util",
  "log",
