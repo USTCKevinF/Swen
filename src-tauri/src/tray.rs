@@ -6,13 +6,15 @@ use tauri::{
 
 use crate::windows::config_window;
 use crate::windows::home_window;
+use crate::windows::ocr_window;
 
 // 初始化托盘
 pub fn init_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let quit_i = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
     let home_i = MenuItem::with_id(app, "home", "主页", true, None::<&str>)?;
     let config_i = MenuItem::with_id(app, "config", "配置", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&quit_i, &home_i, &config_i])?;
+    let ocr_i = MenuItem::with_id(app, "ocr", "OCR", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&quit_i, &home_i, &config_i, &ocr_i])?;
 
     let _tray = TrayIconBuilder::new()
         .menu(&menu)
@@ -29,6 +31,10 @@ pub fn init_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             "config" => {
                 println!("Config menu item clicked");
                 config_window();
+            }
+            "ocr" => {
+                println!("OCR menu item clicked");
+                ocr_window();
             }
             _ => {
                 println!("menu item {:?} not handled", event.id);

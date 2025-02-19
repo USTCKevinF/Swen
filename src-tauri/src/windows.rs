@@ -8,6 +8,7 @@ use tauri::Monitor;
 use tauri::WebviewWindow;
 use tauri::{AppHandle, Emitter};
 use tauri::Runtime;
+use tauri::Listener;
 use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
 
 // Get monitor where the mouse is currently located
@@ -127,6 +128,27 @@ pub fn home_window() {
     // window.set_transparent_titlebar(true, true);
 }
 
+pub fn screenshot_window() -> WebviewWindow {
+    let (window, _exists) = build_window("screenshot", "Screenshot");
+
+    window.set_skip_taskbar(true).unwrap();
+    #[cfg(target_os = "macos")]
+    {
+        let monitor = window.current_monitor().unwrap().unwrap();
+        let size = monitor.size();
+        window.set_decorations(false).unwrap();
+        // window.set_size(*size).unwrap();
+        window.set_size(tauri::LogicalSize::new(400, 500)).unwrap();
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    window.set_fullscreen(true).unwrap();
+
+    window.set_focus().unwrap();
+    window.set_always_on_top(true).unwrap();
+    window
+}
+
 pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
     match event.state() {
         ShortcutState::Pressed => {
@@ -153,6 +175,29 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
             info!("Shortcut released");
         }
     }
+}
+
+pub fn ocr_get() {
+    let app_handle = APP.get().unwrap();
+    let state: tauri::State<StringWrapper> = app_handle.state();
+
+    state
+        .0
+        .lock()
+        .unwrap()
+        .replace_range(.., "[IMAGE_TRANSLATE]");
+    app_handle.emit_to("home", "update-input", "[IMAGE_TRANSLATE]").unwrap();
+    home_window();
+
+}
+
+pub fn ocr_window() {
+    let window = screenshot_window();
+    let window_ = window.clone();
+    window.listen("success", move |event| {
+        ocr_get();
+        window_.unlisten(event.id())
+    });
 }
 
 use cocoa::appkit::{NSWindow, NSWindowStyleMask, NSWindowTitleVisibility};

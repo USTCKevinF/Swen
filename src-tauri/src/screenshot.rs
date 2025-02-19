@@ -26,13 +26,17 @@ pub fn screenshot(x: i32, y: i32) {
             info!("截图保存路径: {:?}", app_cache_dir_path);
 
             let image = screen.capture().unwrap();
-            let buffer = image.to_png(Compression::Fast).unwrap();
-            use std::io::BufWriter;
-            let file = fs::File::create(&app_cache_dir_path).expect("创建文件失败");
-            let mut writer = BufWriter::new(file);
-            match writer.write_all(&buffer) {
-                Ok(_) => info!("截图保存成功"),
-                Err(e) => error!("截图保存失败: {:?}", e),
+            info!("截图成功");
+            
+            // 将图片编码为 PNG 格式
+            match image.to_png(Compression::Fast) {
+                Ok(buffer) => {
+                    match fs::write(&app_cache_dir_path, buffer) {
+                        Ok(_) => info!("截图保存成功"),
+                        Err(e) => error!("截图保存失败: {:?}", e),
+                    }
+                },
+                Err(e) => error!("PNG 编码失败: {:?}", e),
             }
             break;
         }
