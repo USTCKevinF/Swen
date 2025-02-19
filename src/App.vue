@@ -23,6 +23,7 @@ const routeMap: Record<string, string> = {
   default: '/',
   home: '/home',
   settings: '/settings',
+  screenshot: '/screenshot',
 }
 const currentLabel = ref('')
 // 根据标签更新路由

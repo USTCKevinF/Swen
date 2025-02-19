@@ -1,6 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod config;
 mod hotkey;
+mod screenshot;
 mod tray;
 mod windows;
 mod llm;
@@ -56,6 +57,8 @@ pub fn run() {
             config::reload_store,
             hotkey::register_shortcut_by_frontend,
             llm::receive_stream,
+            screenshot::screenshot,
+            screenshot::cut_image,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -5,8 +5,7 @@ import { listen } from '@tauri-apps/api/event';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { ElMessage } from 'element-plus';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-const StarFilled  = ElementPlusIconsVue
+import { StarFilled } from '@element-plus/icons-vue'
 const isFavorite = ref(false);
 
 const inputText = ref("");

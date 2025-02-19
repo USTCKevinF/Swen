@@ -21,7 +21,11 @@
       }
     ],
     "security": {
-      "csp": null,
+      "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' asset: http://asset.localhost",
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**"]
+      },
       "capabilities": [
         {
           "identifier": "custom-permision",
@@ -35,6 +39,9 @@
             },
             "core:window:allow-create",
             "core:window:allow-close",
+            "core:window:allow-current-monitor",
+            "core:window:default",
+            "core:window:allow-set-focus",
             "core:webview:allow-create-webview",
             "core:webview:allow-webview-close",
             "core:webview:allow-create-webview-window",
