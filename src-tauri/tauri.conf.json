@@ -5,7 +5,7 @@
   "identifier": "com.yysm_tool.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1422",
+    "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
@@ -48,6 +48,7 @@
             "core:window:allow-hide",
             "core:window:allow-show",
             "core:window:allow-start-dragging",
+            "core:window:allow-set-resizable",
             "core:event:default",
             "core:event:allow-listen",
             "core:path:allow-resolve-directory",

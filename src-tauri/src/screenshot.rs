@@ -1,5 +1,6 @@
 use log::info;
 use log::error;
+use std::time::Instant;
 
 #[tauri::command]
 pub fn screenshot(x: i32, y: i32) {
@@ -7,7 +8,8 @@ pub fn screenshot(x: i32, y: i32) {
     use dirs::cache_dir;
     use screenshots::{Screen, Compression};
     use std::fs;
-    use std::io::Write;
+
+    let start_time = Instant::now();
     info!("开始截图，位置: x={}, y={}", x, y);
     let screens = Screen::all().unwrap();
     for screen in screens {
@@ -25,14 +27,20 @@ pub fn screenshot(x: i32, y: i32) {
             app_cache_dir_path.push("YYSM_Tool_screenshot.png");
             info!("截图保存路径: {:?}", app_cache_dir_path);
 
+            let capture_start = Instant::now();
             let image = screen.capture().unwrap();
-            info!("截图成功");
+            info!("截图耗时: {:?}", capture_start.elapsed());
             
-            // 将图片编码为 PNG 格式
+            let encode_start = Instant::now();
             match image.to_png(Compression::Fast) {
                 Ok(buffer) => {
+                    info!("PNG编码耗时: {:?}", encode_start.elapsed());
+                    let save_start = Instant::now();
                     match fs::write(&app_cache_dir_path, buffer) {
-                        Ok(_) => info!("截图保存成功"),
+                        Ok(_) => {
+                            info!("文件保存耗时: {:?}", save_start.elapsed());
+                            info!("总耗时: {:?}", start_time.elapsed());
+                        },
                         Err(e) => error!("截图保存失败: {:?}", e),
                     }
                 },

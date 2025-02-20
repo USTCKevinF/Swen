@@ -5,6 +5,8 @@ mod screenshot;
 mod tray;
 mod windows;
 mod llm;
+mod ocr;
+
 use hotkey::init_register_shortcut;
 use log::info;
 use once_cell::sync::OnceCell;
@@ -59,6 +61,7 @@ pub fn run() {
             llm::receive_stream,
             screenshot::screenshot,
             screenshot::cut_image,
+            ocr::system_ocr,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

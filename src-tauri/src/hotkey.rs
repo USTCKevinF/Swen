@@ -1,5 +1,5 @@
 use crate::config::{get, set};
-use crate::windows::selection_get;
+use crate::windows::{ocr_get_hotkey, selection_get};
 use crate::APP;
 use log::{info, warn};
 use tauri::AppHandle;
@@ -54,8 +54,12 @@ pub fn init_register_shortcut(shortcut: &str) -> Result<(), String> {
         "hotkey_selection_get" => {
             register_hotkey(app_handle, "hotkey_selection_get", selection_get, "")?
         }
+        "hotkey_ocr" => {
+            register_hotkey(app_handle, "hotkey_ocr", ocr_get_hotkey, "")?
+        }
         "all" => {
             register_hotkey(app_handle, "hotkey_selection_get", selection_get, "")?;
+            register_hotkey(app_handle, "hotkey_ocr", ocr_get_hotkey, "")?;
         }
         _ => {}
     }
@@ -68,6 +72,9 @@ pub fn register_shortcut_by_frontend(name: &str, shortcut: &str) -> Result<(), S
     match name {
         "hotkey_selection_get" => {
             register_hotkey(app_handle, "hotkey_selection_get", selection_get, shortcut)?
+        }
+        "hotkey_ocr" => {
+            register_hotkey(app_handle, "hotkey_ocr", ocr_get_hotkey, shortcut)?
         }
         _ => {}
     }

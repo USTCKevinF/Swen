@@ -6,7 +6,7 @@ use tauri::{
 
 use crate::windows::config_window;
 use crate::windows::home_window;
-use crate::windows::ocr_window;
+use crate::windows::ocr_get;
 
 // 初始化托盘
 pub fn init_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
@@ -34,7 +34,7 @@ pub fn init_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             }
             "ocr" => {
                 println!("OCR menu item clicked");
-                ocr_window();
+                ocr_get();
             }
             _ => {
                 println!("menu item {:?} not handled", event.id);

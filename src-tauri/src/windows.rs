@@ -10,6 +10,9 @@ use tauri::{AppHandle, Emitter};
 use tauri::Runtime;
 use tauri::Listener;
 use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
+use crate::ocr::system_ocr;
+use dirs::cache_dir;
+
 
 // Get monitor where the mouse is currently located
 // Get daemon window instance
@@ -138,7 +141,7 @@ pub fn screenshot_window() -> WebviewWindow {
         let size = monitor.size();
         window.set_decorations(false).unwrap();
         // window.set_size(*size).unwrap();
-        window.set_size(tauri::LogicalSize::new(400, 500)).unwrap();
+        window.set_size(tauri::LogicalSize::new(800, 600)).unwrap();
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -178,26 +181,90 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
 }
 
 pub fn ocr_get() {
-    let app_handle = APP.get().unwrap();
-    let state: tauri::State<StringWrapper> = app_handle.state();
-
-    state
-        .0
-        .lock()
-        .unwrap()
-        .replace_range(.., "[IMAGE_TRANSLATE]");
-    app_handle.emit_to("home", "update-input", "[IMAGE_TRANSLATE]").unwrap();
-    home_window();
-
-}
-
-pub fn ocr_window() {
     let window = screenshot_window();
     let window_ = window.clone();
     window.listen("success", move |event| {
-        ocr_get();
+        let app_handle = APP.get().unwrap();
+        let cache_dir = cache_dir().expect("无法获取缓存目录");
+        let app_cache_dir = cache_dir.join(&app_handle.config().identifier);
+        
+        // 确保目录存在
+        if !app_cache_dir.exists() {
+            std::fs::create_dir_all(&app_cache_dir).expect("无法创建缓存目录");
+        }
+        
+        // 检查裁剪后的图片是否存在
+        let cut_image_path = app_cache_dir.join("YYSM_Tool_screenshot_cut.png");
+        if !cut_image_path.exists() {
+            warn!("裁剪后的图片不存在: {:?}", cut_image_path);
+            return;
+        }
+        
+        let state: tauri::State<StringWrapper> = app_handle.state();
+        
+        // 添加日志以便调试
+        info!("开始进行OCR识别，图片路径: {:?}", cut_image_path);
+        
+        let ocr_result = match system_ocr(app_handle.clone(), "auto") {
+            Ok(result) => result,
+            Err(e) => {
+                warn!("OCR 失败: {}", e);
+                return;
+            }
+        };
+        
+        info!("OCR Result: {}", ocr_result);
+        state.0.lock().unwrap().replace_range(.., &ocr_result);
+        
+        app_handle.emit_to("home", "update-input", ocr_result).unwrap();
+        home_window();
         window_.unlisten(event.id())
     });
+
+}
+
+pub fn ocr_get_hotkey(_app_handle: &AppHandle, _shortcut: &Shortcut, _event: ShortcutEvent) {
+    let window = screenshot_window();
+    let window_ = window.clone();
+    // 克隆 app_handle 以便在闭包中使用
+    window.listen("success", move |event| {
+        let app_handle = APP.get().unwrap();
+        let cache_dir = cache_dir().expect("无法获取缓存目录");
+        let app_cache_dir = cache_dir.join(&app_handle.config().identifier);
+        
+        // 确保目录存在
+        if !app_cache_dir.exists() {
+            std::fs::create_dir_all(&app_cache_dir).expect("无法创建缓存目录");
+        }
+        
+        // 检查裁剪后的图片是否存在
+        let cut_image_path = app_cache_dir.join("YYSM_Tool_screenshot_cut.png");
+        if !cut_image_path.exists() {
+            warn!("裁剪后的图片不存在: {:?}", cut_image_path);
+            return;
+        }
+        
+        let state: tauri::State<StringWrapper> = app_handle.state();
+        
+        // 添加日志以便调试
+        info!("开始进行OCR识别，图片路径: {:?}", cut_image_path);
+        
+        let ocr_result = match system_ocr(app_handle.clone(), "auto") {
+            Ok(result) => result,
+            Err(e) => {
+                warn!("OCR 失败: {}", e);
+                return;
+            }
+        };
+        
+        info!("OCR Result: {}", ocr_result);
+        state.0.lock().unwrap().replace_range(.., &ocr_result);
+        
+        app_handle.emit_to("home", "update-input", ocr_result).unwrap();
+        home_window();
+        window_.unlisten(event.id())
+    });
+
 }
 
 use cocoa::appkit::{NSWindow, NSWindowStyleMask, NSWindowTitleVisibility};

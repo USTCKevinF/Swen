@@ -30,16 +30,16 @@
           <h3 class="m-0 text-[15px] font-medium text-gray-800">{{ t('settings.shortcut.screenshotShortcut') }}</h3>
         </div>
         <el-input
-          v-model="inputTranslate"
+          v-model="ocr"
           :placeholder="t('settings.shortcut.clickToInput')"
-          @keydown="(e) => keyDown(e, setInputTranslate)"
-          @focus="() => handleFocus(inputTranslate, setInputTranslate)"
+          @keydown="(e) => keyDown(e, setOcr)"
+          @focus="() => handleFocus(ocr, setOcr)"
         >
           <template #append>
             <el-button
               type="primary"
-              v-if="inputTranslate"
-              @click="registerHandler('hotkey_input_translate', inputTranslate)"
+              v-if="ocr"
+              @click="registerHandler('hotkey_ocr', ocr)"
             >
               {{ t('settings.shortcut.save') }}
             </el-button>
@@ -95,7 +95,7 @@ const keyMap = {
 }
 
 const { property: selectionTranslate, setProperty: setSelectionTranslate } = useConfig('hotkey_selection_get', '')
-const { property: inputTranslate, setProperty: setInputTranslate } = useConfig('hotkey_input_translate', '')
+const { property: ocr, setProperty: setOcr } = useConfig('hotkey_ocr', '')
 
 const keyDown = (e, setKey) => {
   e.preventDefault()
