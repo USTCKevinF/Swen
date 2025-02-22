@@ -120,13 +120,13 @@ const handlePinClick = () => {
         </div>
       </el-header>
       <el-main class="p-3 mt-8 overflow-y-auto">
-        <el-input
-            v-model="inputText"
-            class="w-full text-sm outline-none mb-2"
-            resize="none"
-            :rows="4"
-            type="textarea"
-        />
+        <div 
+          class="text-[13px] mb-4 pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden"
+        >
+          <div class="overflow-hidden text-ellipsis whitespace-nowrap">
+            {{"Q: " + inputText }}
+          </div>
+        </div>
         <DeepseekExplanation :inputText="inputText" />
       </el-main>
     </el-container>
@@ -254,4 +254,5 @@ img {
   -moz-user-select: text;
   -ms-user-select: text;
 }
+
 </style>

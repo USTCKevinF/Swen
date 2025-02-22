@@ -1,6 +1,6 @@
 <template>
   <div class="option-item">
-    <div class="option-header" @click="getDeepseekExplanation">
+    <!-- <div class="option-header" @click="getDeepseekExplanation">
       <span>DeepSeek 解释</span>
       <div class="header-actions">
         <span class="loading-icon" v-if="isLoading">
@@ -8,7 +8,7 @@
         </span>
         <el-icon v-else class="arrow"><ArrowRight /></el-icon>
       </div>
-    </div>
+    </div> -->
     <div v-if="deepseekResponse" class="flex flex-col  selectable-text">
       <MdPreview 
         :modelValue="deepseekResponse"
@@ -144,6 +144,9 @@ function handleRedo() {
 const listenInputUpdate = async () => {
   unlistenInput = await listen('update-input', () => {
     deepseekResponse.value = ""; // 清空之前的解释内容
+    if (props.inputText.trim()) {  // 确保输入文本不为空
+      getDeepseekExplanation();    // 自动执行解释
+    }
   });
 };
 
