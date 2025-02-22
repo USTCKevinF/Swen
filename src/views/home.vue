@@ -4,6 +4,7 @@ import { onMounted, onUnmounted } from 'vue';
 import { listen } from '@tauri-apps/api/event';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { ElMessage } from 'element-plus';
 import { StarFilled } from '@element-plus/icons-vue'
 const isFavorite = ref(false);
@@ -52,9 +53,8 @@ const listenInputUpdate = async () => {
 
 onMounted(async () => {
   try {
-    currentWindow.show();
-    await listenBlur();
     await listenInputUpdate();
+    await listenBlur();
     
     // 监听获得焦点事件，取消关闭计时
     await listen('tauri://focus', () => {
@@ -62,15 +62,21 @@ onMounted(async () => {
         clearTimeout(blurTimeout);
       }
     });
-
+    
     // 监听移动事件，取消关闭计时
     await listen('tauri://move', () => {
       if (blurTimeout) {
         clearTimeout(blurTimeout);
       }
     });
-
+    
     isWindowFullyShown = true;
+    
+    // 添加初始化完成事件
+    const appWindow = await getCurrentWebviewWindow();
+    await appWindow.emit("home-ready");
+    appWindow.show();
+
   } catch (err) {
     console.error(err)
   }
