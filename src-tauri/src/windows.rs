@@ -119,16 +119,17 @@ pub fn config_window() {
     window.center().unwrap();
 }
 
-pub fn home_window() {
+pub fn home_window() -> (WebviewWindow, bool){
     let (window, _exists) = build_window("home", "Home");
     window
-        .set_min_size(Some(tauri::LogicalSize::new(400, 500)))
+        .set_min_size(Some(tauri::LogicalSize::new(400, 300)))
         .unwrap();
-    window.set_size(tauri::LogicalSize::new(400, 500)).unwrap();
+    window.set_size(tauri::LogicalSize::new(400, 300)).unwrap();
     window.center().unwrap();
     window.set_always_on_top(true).unwrap();
     window.set_focus().unwrap();
     // window.set_transparent_titlebar(true, true);
+    (window, _exists)
 }
 
 pub fn screenshot_window() -> WebviewWindow {
@@ -164,9 +165,7 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
                         info!("Selected text: {}", text);
                         
                         // 先创建窗口再发送事件
-                        let (window, exists) = build_window("home", "Home");
-                        window.set_always_on_top(true).unwrap();
-                        window.set_focus().unwrap();
+                        let (window, exists) = home_window();
 
                         // 添加事件监听确保前端已准备好
                         let app_handle_clone = app_handle.clone();
@@ -185,7 +184,6 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
                     } else {
                         warn!("获取选中文本失败: 没有选中文本");
                     }
-                    home_window();
                 },
                 Err(e) => {
                     warn!("获取选中文本失败: 发生错误: {}", e);
@@ -207,9 +205,7 @@ pub fn system_screenshot_window() {
         return;
     }
     // 先创建窗口
-    let (window, exists) = build_window("home", "Home");
-    window.set_always_on_top(true).unwrap();
-    window.set_focus().unwrap();
+    let (window, exists) = home_window();
 
     // 克隆必要的变量供闭包使用
     let app_handle_clone = app_handle.clone();
@@ -251,10 +247,7 @@ pub fn system_screenshot_hotkey(app_handle: &AppHandle, _shortcut: &Shortcut, ev
                 return;
             }
             // 先创建窗口
-            let (window, exists) = build_window("home", "Home");
-            window.set_always_on_top(true).unwrap();
-            window.set_focus().unwrap();
-
+            let (window, exists) = home_window();
             // 克隆必要的变量供闭包使用
             let app_handle_clone = app_handle.clone();
             let state: tauri::State<StringWrapper> = app_handle_clone.state();
