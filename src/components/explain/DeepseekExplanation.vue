@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted} from "vue";
+import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import { DocumentCopy, RefreshRight } from '@element-plus/icons-vue'
@@ -52,6 +52,17 @@ const props = defineProps<{
 const thisRequestVersion = ref(Date.now());
 const deepseekResponse = ref("");
 const isLoading = ref(false);
+
+// 添加一个用于跟踪内容变化的 watch
+watch(deepseekResponse, () => {
+  nextTick(() => {
+    // 获取 el-main 元素
+    const mainElement = document.querySelector('.el-main');
+    if (mainElement) {
+      mainElement.scrollTop = mainElement.scrollHeight;
+    }
+  });
+});
 
 // 当前流事件监听取消函数
 let fetchStreamUnlisten: (() => void) | null = null;
