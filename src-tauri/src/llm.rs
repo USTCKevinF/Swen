@@ -6,6 +6,7 @@ use serde_json;
 
 #[derive(Clone, serde::Serialize)]
 pub struct StreamPayload {
+    pub request_id: u64,
     pub message: String,
     pub prompt: String,
 }
@@ -16,6 +17,7 @@ pub async fn receive_stream<R: Runtime>(
     url: &str,
     cookie: &str,
     prompt: &str,
+    request_id: u64,
 ) -> Result<String, String> {
     // 解析传入的 JSON 字符串
     let prompt_data: serde_json::Value = serde_json::from_str(prompt)
@@ -55,6 +57,7 @@ pub async fn receive_stream<R: Runtime>(
                     .emit(
                         "fetch-stream-data",
                         StreamPayload {
+                            request_id,
                             message: chunk.to_string(),
                             prompt: prompt.to_string(),
                         },

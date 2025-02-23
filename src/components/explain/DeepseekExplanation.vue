@@ -49,10 +49,15 @@ const props = defineProps<{
   inputText: string
 }>();
 
+// 新增请求版本号，全局自增，每次请求时作为唯一标识
+let requestVersion = 0;
+const currentRequestVersion = ref(0);
+
 const deepseekResponse = ref("");
 const isLoading = ref(false);
 
-let unlistenInput: any = null;
+// 当前流事件监听取消函数
+let fetchStreamUnlisten: (() => void) | null = null;
 
 const { property: baseURL } = useConfig('llm.baseURL', '')
 const { property: apiKey } = useConfig('llm.apiKey', '')
@@ -61,32 +66,39 @@ const { property: model } = useConfig('llm.model', '')
 async function getDeepseekExplanation() {
   if (!props.inputText) return;
   
+  // 更新请求版本号
+  requestVersion++;
+  const thisRequestVersion = requestVersion;
+  currentRequestVersion.value = thisRequestVersion;
+  
+  // 取消旧的流事件监听（如果存在）
+  if (fetchStreamUnlisten) {
+    fetchStreamUnlisten();
+    fetchStreamUnlisten = null;
+  }
+  
   isLoading.value = true;
   deepseekResponse.value = "";
-  let systemPrompt = "你是一个包罗万象的知识专家，擅长于给用户解释其提出的概念，用户是一名好学且好奇的学生，会提供一些名词或者概念给你。规则：- 你需要详细地解答，并且以易懂的方式叙述你的观点 - 你的目标是让用户更深入的理解其提供的概念 - 无论用户提供的是什么语言，均用中文进行回复 - 输出完解释之后立刻停止，不要说类似如果你有更多的问题，欢迎继续提问的话.Please use $ instead of \\( and \\) for LaTeX math expressions.";
+  const systemPrompt = "你是一个包罗万象的知识专家，擅长于给用户解释其提出的概念，用户是一名好学且好奇的学生，会提供一些名词或者概念给你。规则：- 你需要详细地解答，并且以易懂的方式叙述你的观点 - 你的目标是让用户更深入的理解其提供的概念 - 无论用户提供的是什么语言，均用中文进行回复 - 输出完解释之后立刻停止，不要说类似如果你有更多的问题，欢迎继续提问的话.Please use $ instead of \\( and \\) for LaTeX math expressions.";
 
   try {
-    const unlisten = await listen('fetch-stream-data', (event: any) => {
+    // 注册流事件监听，并在事件回调中检验 request_id
+    fetchStreamUnlisten = await listen('fetch-stream-data', (event: any) => {
+      // 检查返回的 request_id 是否与当前请求匹配，不匹配则忽略该数据
+      console.log('thisRequestVersion:', thisRequestVersion);
+      console.log('event.payload:', event.payload);
+      if (event.payload.request_id !== thisRequestVersion) return;
       const { message } = event.payload;
       console.log('Received stream data:', message);
       if (message && typeof message === 'string') {
-        // 按照两个换行符分割多条数据
+        // 根据两个换行符分割数据
         const messages = message.split('\n\n');
-        
         messages.forEach(msg => {
-          if (!msg.trim()) return; // 跳过空消息
-          
+          if (!msg.trim()) return;
           try {
-            // 检查是否是结束标记
-            if (msg.includes('[DONE]')) {
-              return;
-            }
-            
-            // 移除 "data: " 前缀
+            if (msg.includes('[DONE]')) return;
             const jsonStr = msg.replace(/^data: /, '');
             const data = JSON.parse(jsonStr);
-            
-            // 获取实际的内容
             const content = data.choices[0]?.delta?.content;
             if (content) {
               deepseekResponse.value += content;
@@ -97,8 +109,8 @@ async function getDeepseekExplanation() {
         });
       }
     });
-
-    // 调用后端
+    
+    // 调用后端流接口，同时传入 request_id 参数
     await invoke('receive_stream', {
       url: `${baseURL.value}/chat/completions`,
       cookie: `Bearer ${apiKey.value}`,
@@ -109,15 +121,19 @@ async function getDeepseekExplanation() {
           { role: "user", content: props.inputText }
         ],
         stream: true
-      })
+      }),
+      requestId: thisRequestVersion,  // 将当前请求的唯一标识传给后端
     });
-
-    unlisten();
   } catch (error) {
     console.error('流处理错误:', error);
     deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
   } finally {
     isLoading.value = false;
+    // 请求完成后取消当前监听，避免残留消息
+    if (fetchStreamUnlisten) {
+      fetchStreamUnlisten();
+      fetchStreamUnlisten = null;
+    }
   }
 }
 
@@ -141,11 +157,13 @@ function handleRedo() {
   getDeepseekExplanation();
 }
 
+let unlistenInput: (() => void) | null = null;
 const listenInputUpdate = async () => {
   unlistenInput = await listen('update-input', () => {
-    deepseekResponse.value = ""; // 清空之前的解释内容
-    if (props.inputText.trim()) {  // 确保输入文本不为空
-      getDeepseekExplanation();    // 自动执行解释
+    // 当输入更新时，清空旧内容并发起新的解释请求
+    deepseekResponse.value = "";
+    if (props.inputText.trim()) {
+      getDeepseekExplanation();
     }
   });
 };
@@ -157,6 +175,9 @@ onMounted(async () => {
 onUnmounted(() => {
   if (unlistenInput) {
     unlistenInput();
+  }
+  if (fetchStreamUnlisten) {
+    fetchStreamUnlisten();
   }
 });
 </script>
