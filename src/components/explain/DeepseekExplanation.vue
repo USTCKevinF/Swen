@@ -36,10 +36,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted} from "vue";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
-import { ArrowRight, DocumentCopy, RefreshRight } from '@element-plus/icons-vue'
+import { DocumentCopy, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
@@ -49,10 +49,7 @@ const props = defineProps<{
   inputText: string
 }>();
 
-// 新增请求版本号，全局自增，每次请求时作为唯一标识
-let requestVersion = 0;
-const currentRequestVersion = ref(0);
-
+const thisRequestVersion = ref(Date.now());
 const deepseekResponse = ref("");
 const isLoading = ref(false);
 
@@ -66,12 +63,10 @@ const { property: model } = useConfig('llm.model', '')
 async function getDeepseekExplanation() {
   if (!props.inputText) return;
   
-  // 更新请求版本号
-  requestVersion++;
-  const thisRequestVersion = requestVersion;
-  currentRequestVersion.value = thisRequestVersion;
+  // 生成新的时间戳作为请求ID
+  thisRequestVersion.value = Date.now();
+  const currentVersion = thisRequestVersion.value;
   
-  // 取消旧的流事件监听（如果存在）
   if (fetchStreamUnlisten) {
     fetchStreamUnlisten();
     fetchStreamUnlisten = null;
@@ -82,21 +77,28 @@ async function getDeepseekExplanation() {
   const systemPrompt = "你是一个包罗万象的知识专家，擅长于给用户解释其提出的概念，用户是一名好学且好奇的学生，会提供一些名词或者概念给你。规则：- 你需要详细地解答，并且以易懂的方式叙述你的观点 - 你的目标是让用户更深入的理解其提供的概念 - 无论用户提供的是什么语言，均用中文进行回复 - 输出完解释之后立刻停止，不要说类似如果你有更多的问题，欢迎继续提问的话.Please use $ instead of \\( and \\) for LaTeX math expressions.";
 
   try {
-    // 注册流事件监听，并在事件回调中检验 request_id
     fetchStreamUnlisten = await listen('fetch-stream-data', (event: any) => {
-      // 检查返回的 request_id 是否与当前请求匹配，不匹配则忽略该数据
-      console.log('thisRequestVersion:', thisRequestVersion);
-      console.log('event.payload:', event.payload);
-      if (event.payload.request_id !== thisRequestVersion) return;
+      // 只处理匹配当前版本的响应
+      console.log('currentVersion: ', currentVersion, 'event.payload.request_id: ', event.payload.request_id);
+      if (event.payload.request_id !== currentVersion) {
+        console.log('忽略过期请求响应:', event.payload.request_id, '当前版本:', currentVersion);
+        return;
+      }
       const { message } = event.payload;
-      console.log('Received stream data:', message);
       if (message && typeof message === 'string') {
-        // 根据两个换行符分割数据
         const messages = message.split('\n\n');
         messages.forEach(msg => {
           if (!msg.trim()) return;
           try {
-            if (msg.includes('[DONE]')) return;
+            // 检测到 [DONE] 时，更新状态并清理监听器
+            if (msg.includes('[DONE]')) {
+              isLoading.value = false;
+              if (fetchStreamUnlisten) {
+                fetchStreamUnlisten();
+                fetchStreamUnlisten = null;
+              }
+              return;
+            }
             const jsonStr = msg.replace(/^data: /, '');
             const data = JSON.parse(jsonStr);
             const content = data.choices[0]?.delta?.content;
@@ -110,7 +112,6 @@ async function getDeepseekExplanation() {
       }
     });
     
-    // 调用后端流接口，同时传入 request_id 参数
     await invoke('receive_stream', {
       url: `${baseURL.value}/chat/completions`,
       cookie: `Bearer ${apiKey.value}`,
@@ -122,14 +123,19 @@ async function getDeepseekExplanation() {
         ],
         stream: true
       }),
-      requestId: thisRequestVersion,  // 将当前请求的唯一标识传给后端
+      requestId: currentVersion,
     });
   } catch (error) {
     console.error('流处理错误:', error);
     deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
-  } finally {
     isLoading.value = false;
-    // 请求完成后取消当前监听，避免残留消息
+    // 发生错误时也需要清理监听器
+    if (fetchStreamUnlisten) {
+      fetchStreamUnlisten();
+      fetchStreamUnlisten = null;
+    }
+  } finally {
+    // finally 块作为最后的保险，确保在异常情况下也能清理监听器
     if (fetchStreamUnlisten) {
       fetchStreamUnlisten();
       fetchStreamUnlisten = null;

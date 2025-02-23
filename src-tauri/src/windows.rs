@@ -11,7 +11,6 @@ use tauri::Runtime;
 use tauri::Listener;
 use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
 use crate::ocr::system_ocr;
-use dirs::cache_dir;
 use crate::screenshot::{system_screenshot};
 
 // Get monitor where the mouse is currently located
@@ -128,6 +127,7 @@ pub fn home_window() -> (WebviewWindow, bool){
     window.center().unwrap();
     window.set_always_on_top(true).unwrap();
     window.set_focus().unwrap();
+    window.set_closable(false).unwrap();
     // window.set_transparent_titlebar(true, true);
     (window, _exists)
 }
@@ -142,7 +142,6 @@ pub fn screenshot_window() -> WebviewWindow {
         let size = monitor.size();
         window.set_decorations(false).unwrap();
         window.set_size(*size).unwrap();
-        // window.set_size(tauri::LogicalSize::new(800, 600)).unwrap();
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -238,6 +237,7 @@ pub fn system_screenshot_window() {
         app_handle.emit_to("home", "update-input", ocr_result).unwrap();
     }
 }
+
 // use system screenshot
 pub fn system_screenshot_hotkey(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
     match event.state() {
