@@ -37,7 +37,8 @@ export default {
       title: '关于应用'
     },
     funding: {
-      title: '赞助奶茶'
+      title: '赞助奶茶',
+      description: '如果觉得这个工具对你有帮助，可以请我喝杯奶茶 :)'
     }
   }
 } 

@@ -37,7 +37,8 @@ export default {
       title: 'About'
     },
     funding: {
-      title: 'Buy Me a Coffee'
+      title: 'Buy Me a Coffee',
+      description: 'If you find this tool helpful, you can buy me a coffee :)'
     }
   }
 } 
