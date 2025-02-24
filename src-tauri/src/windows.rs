@@ -180,9 +180,7 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
                             })).unwrap();
                         }
                         else{
-                            info!("home-not-exists");
                             window.once("home-ready", move |_| {
-                                info!("home-ready");
                                 app_handle_clone.emit_to("home", "update-input", json!({
                                     "payload": text_clone,
                                     "requestId": timestamp
@@ -211,8 +209,7 @@ pub fn system_screenshot_window() {
     }
     // 先创建窗口
     let (window, exists) = home_window();
-
-    // 克隆必要的变量供闭包使用
+    
     let app_handle_clone = app_handle.clone();
     let state: tauri::State<StringWrapper> = app_handle_clone.state();
     let ocr_result = match system_ocr(app_handle_clone.clone(), "auto") {
@@ -225,21 +222,30 @@ pub fn system_screenshot_window() {
             return;
         }
     };
+    
     state.0.lock().unwrap().replace_range(.., &ocr_result);
+    
+    // 添加时间戳
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+    
     let ocr_result_clone = ocr_result.clone();
-    // 添加事件监听确保前端已准备好
-    window.listen("home-ready", move |_| {
-        if !ocr_result_clone.trim().is_empty() {
-            app_handle_clone.emit_to("home", "update-input", &ocr_result_clone).unwrap();
-        }
-    });
-    if !exists {
-        // 新窗口需要等待前端初始化
+    
+    if exists {
+        app_handle.emit_to("home", "update-input", json!({
+            "payload": ocr_result,
+            "requestId": timestamp
+        })).unwrap();
+    } else {
+        window.once("home-ready", move |_| {
+            app_handle_clone.emit_to("home", "update-input", json!({
+                "payload": ocr_result_clone,
+                "requestId": timestamp
+            })).unwrap();
+        });
         window.show().unwrap();
-    }
-    else {
-        // 已有窗口直接发送事件
-        app_handle.emit_to("home", "update-input", ocr_result).unwrap();
     }
 }
 
@@ -253,7 +259,7 @@ pub fn system_screenshot_hotkey(app_handle: &AppHandle, _shortcut: &Shortcut, ev
             }
             // 先创建窗口
             let (window, exists) = home_window();
-            // 克隆必要的变量供闭包使用
+            
             let app_handle_clone = app_handle.clone();
             let state: tauri::State<StringWrapper> = app_handle_clone.state();
             let ocr_result = match system_ocr(app_handle_clone.clone(), "auto") {
@@ -268,20 +274,28 @@ pub fn system_screenshot_hotkey(app_handle: &AppHandle, _shortcut: &Shortcut, ev
             };
             
             state.0.lock().unwrap().replace_range(.., &ocr_result);
+            
+            // 添加时间戳
+            let timestamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis();
+            
             let ocr_result_clone = ocr_result.clone();
-            // 添加事件监听确保前端已准备好
-            window.listen("home-ready", move |_| {
-                if !ocr_result_clone.trim().is_empty() {
-                    app_handle_clone.emit_to("home", "update-input", &ocr_result_clone).unwrap();
-                }
-            });
-            if !exists {
-                // 新窗口需要等待前端初始化
+            
+            if exists {
+                app_handle.emit_to("home", "update-input", json!({
+                    "payload": ocr_result,
+                    "requestId": timestamp
+                })).unwrap();
+            } else {
+                window.once("home-ready", move |_| {
+                    app_handle_clone.emit_to("home", "update-input", json!({
+                        "payload": ocr_result_clone,
+                        "requestId": timestamp
+                    })).unwrap();
+                });
                 window.show().unwrap();
-            }
-            else {
-                // 已有窗口直接发送事件
-                app_handle.emit_to("home", "update-input", ocr_result).unwrap();
             }
         }
         ShortcutState::Released => {
