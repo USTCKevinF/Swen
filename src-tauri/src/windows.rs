@@ -58,7 +58,7 @@ fn get_current_monitor(x: i32, y: i32) -> Monitor {
 }
 
 // Creating a window on the mouse monitor
-fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
+pub fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
     use mouse_position::mouse_position::{Mouse, Position};
 
     let mouse_position = match Mouse::get_mouse_position() {
@@ -123,11 +123,11 @@ pub fn home_window() -> (WebviewWindow, bool){
     window
         .set_min_size(Some(tauri::LogicalSize::new(400, 300)))
         .unwrap();
-    window.set_size(tauri::LogicalSize::new(400, 300)).unwrap();
+    window.set_size(tauri::LogicalSize::new(500, 400)).unwrap();
     window.center().unwrap();
     window.set_always_on_top(true).unwrap();
     window.set_focus().unwrap();
-    window.set_closable(false).unwrap();
+    // window.set_closable(false).unwrap();
     // window.set_transparent_titlebar(true, true);
     (window, _exists)
 }
@@ -170,6 +170,7 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
                         let app_handle_clone = app_handle.clone();
                         let text_clone = text.clone();
                         window.listen("home-ready", move |_| {
+                            info!("home-ready");
                             app_handle_clone.emit_to("home", "update-input", &text_clone).unwrap();
                         });
 

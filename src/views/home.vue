@@ -71,11 +71,13 @@ onMounted(async () => {
     
     isWindowFullyShown = true;
     
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     // 添加初始化完成事件
     const appWindow = await getCurrentWebviewWindow();
     await appWindow.emit("home-ready");
     appWindow.show();
-
+    
   } catch (err) {
     console.error(err)
   }
@@ -215,11 +217,6 @@ const handlePinClick = () => {
   display: flex;
   align-items: center;
   padding: 0 8px;
-}
-
-img {
-  opacity: 0.4;
-  transition: all 0.15s ease;
 }
 
 .pin-active {
