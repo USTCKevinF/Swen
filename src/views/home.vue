@@ -109,8 +109,8 @@ const handlePinClick = () => {
           </div>
           <div class="cursor-pointer" @click="handlePinClick">
             <img 
-              src= '../assets/pin.svg'
-              class="w-6 h-6"
+              src= '../assets/svg/pin.svg'
+              class="w-6 h-6 opacity-30"
               :alt="isPinned ? 'Pinned' : 'Not Pinned'"
               :title="isPinned ? '取消钉住窗口' : '钉住窗口'"
               :class="{ 'pin-active': isPinned }"

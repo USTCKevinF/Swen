@@ -15,10 +15,11 @@ pub struct StreamPayload {
 pub async fn receive_stream<R: Runtime>(
     app_handle: AppHandle<R>,
     url: &str,
-    cookie: &str,
+    auth_token: &str,
     prompt: &str,
     request_id: u64,
 ) -> Result<String, String> {
+    
     // 解析传入的 JSON 字符串
     let prompt_data: serde_json::Value = serde_json::from_str(prompt)
         .map_err(|e| format!("Failed to parse prompt JSON: {}", e))?;
@@ -26,8 +27,8 @@ pub async fn receive_stream<R: Runtime>(
     let mut headers = header::HeaderMap::new();
     headers.insert(
         header::AUTHORIZATION,
-        header::HeaderValue::from_str(cookie)
-            .map_err(|e| format!("Invalid header value: {}", e))?
+        header::HeaderValue::from_str(auth_token)
+            .map_err(|e| format!("Invalid authorization token: {}", e))?
     );
 
     let client = Client::builder()

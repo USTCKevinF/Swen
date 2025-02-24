@@ -125,7 +125,7 @@ async function getDeepseekExplanation() {
     
     await invoke('receive_stream', {
       url: `${baseURL.value}/chat/completions`,
-      cookie: `Bearer ${apiKey.value}`,
+      authToken: `Bearer ${apiKey.value}`,
       prompt: JSON.stringify({
         model: model.value,
         messages: [
