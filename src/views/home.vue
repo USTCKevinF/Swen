@@ -83,7 +83,6 @@ onMounted(async () => {
     const appWindow = await getCurrentWebviewWindow();
     await appWindow.emit("home-ready");
     console.log('home-ready');
-    appWindow.show();
     
   } catch (err) {
     console.error(err)

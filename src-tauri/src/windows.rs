@@ -11,8 +11,10 @@ use tauri::Runtime;
 use tauri::Listener;
 use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
 use crate::ocr::system_ocr;
-use crate::screenshot::{system_screenshot};
+use crate::screenshot::system_screenshot;
+use mouse_position::mouse_position::{Mouse, Position};
 use serde_json::json;
+use crate::config::get;
 
 // Get monitor where the mouse is currently located
 // Get daemon window instance
@@ -60,8 +62,6 @@ fn get_current_monitor(x: i32, y: i32) -> Monitor {
 
 // Creating a window on the mouse monitor
 pub fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
-    use mouse_position::mouse_position::{Mouse, Position};
-
     let mouse_position = match Mouse::get_mouse_position() {
         Mouse::Position { x, y } => Position { x, y },
         Mouse::Error => {
@@ -120,17 +120,40 @@ pub fn config_window() {
 }
 
 pub fn home_window() -> (WebviewWindow, bool){
-    let (window, _exists) = build_window("home", "Home");
+    let (window, exists) = build_window("home", "Home");
     window
         .set_min_size(Some(tauri::LogicalSize::new(400, 300)))
         .unwrap();
     window.set_size(tauri::LogicalSize::new(500, 400)).unwrap();
-    window.center().unwrap();
-    window.set_always_on_top(true).unwrap();
     window.set_focus().unwrap();
+
+    let binding = get("windowPosition").unwrap();
+    let window_position = binding.as_str().unwrap();
+    if window_position == "center" {
+        window.center().unwrap();
+    }
+    else if window_position == "followMouse" {
+        let mouse_position = match Mouse::get_mouse_position() {
+            Mouse::Position { x, y } => Position { x, y },
+            Mouse::Error => {
+                warn!("Mouse position not found, using (0, 0) as default");
+                Position { x: 0, y: 0 }
+            }
+        };
+        window.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(
+            mouse_position.x,
+            mouse_position.y,
+        ))).unwrap();
+    }
+    else if window_position == "remember" {
+        if ! exists {
+            window.center().unwrap();
+        }
+    }
+    window.show().unwrap();
     // window.set_closable(false).unwrap();
     // window.set_transparent_titlebar(true, true);
-    (window, _exists)
+    (window, exists)
 }
 
 pub fn screenshot_window() -> WebviewWindow {

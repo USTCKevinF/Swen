@@ -4,7 +4,7 @@ export default {
     general: {
       title: '通用设置',
       displayLanguage: '显示语言',
-      windowPosition: '窗口位置',
+      windowPosition: '打开窗口位置',
       followMouse: '跟随鼠标',
       center: '屏幕居中',
       remember: '记住位置',
