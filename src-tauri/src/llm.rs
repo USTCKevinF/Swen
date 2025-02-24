@@ -1,28 +1,30 @@
 use futures_util::StreamExt;
 use tauri_plugin_http::reqwest::{header, Client};
 use std::str::from_utf8;
-use tauri::{AppHandle, Runtime, Emitter};
+use tauri::Emitter;
 use serde_json;
-
+use crate::APP;
 #[derive(Clone, serde::Serialize)]
 pub struct StreamPayload {
-    pub request_id: u64,
     pub message: String,
-    pub prompt: String,
+    pub responseId: u128,
 }
 
 #[tauri::command]
-pub async fn receive_stream<R: Runtime>(
-    app_handle: AppHandle<R>,
+pub async fn receive_stream(
     url: &str,
     auth_token: &str,
     prompt: &str,
-    request_id: u64,
 ) -> Result<String, String> {
-    
+    let app_handle = APP.get().unwrap();
     // 解析传入的 JSON 字符串
     let prompt_data: serde_json::Value = serde_json::from_str(prompt)
         .map_err(|e| format!("Failed to parse prompt JSON: {}", e))?;
+
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
 
     let mut headers = header::HeaderMap::new();
     headers.insert(
@@ -53,14 +55,13 @@ pub async fn receive_stream<R: Runtime>(
         match item {
             Ok(bytes) => {
                 let chunk = from_utf8(&bytes).unwrap();
-                // println!("{}", chunk);
                 app_handle
-                    .emit(
+                    .emit_to(
+                        "home",
                         "fetch-stream-data",
                         StreamPayload {
-                            request_id,
                             message: chunk.to_string(),
-                            prompt: prompt.to_string(),
+                            responseId: timestamp,
                         },
                     )
                     .unwrap();

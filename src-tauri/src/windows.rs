@@ -12,6 +12,7 @@ use tauri::Listener;
 use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
 use crate::ocr::system_ocr;
 use crate::screenshot::{system_screenshot};
+use serde_json::json;
 
 // Get monitor where the mouse is currently located
 // Get daemon window instance
@@ -163,35 +164,39 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
                         state.0.lock().unwrap().replace_range(.., &text);
                         info!("Selected text: {}", text);
                         
-                        // 先创建窗口再发送事件
                         let (window, exists) = home_window();
+                        let timestamp = std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_millis();
 
-                        // 添加事件监听确保前端已准备好
                         let app_handle_clone = app_handle.clone();
                         let text_clone = text.clone();
-                        window.listen("home-ready", move |_| {
-                            info!("home-ready");
-                            app_handle_clone.emit_to("home", "update-input", &text_clone).unwrap();
-                        });
 
-                        if !exists {
-                            // 新窗口需要等待前端初始化
-                            window.show().unwrap();
-                        } else {
-                            // 已有窗口直接发送事件
-                            app_handle.emit_to("home", "update-input", text).unwrap();
+                        if exists {
+                            app_handle.emit_to("home", "update-input", json!({
+                                "payload": text,
+                                "requestId": timestamp
+                            })).unwrap();
                         }
-                    } else {
-                        warn!("获取选中文本失败: 没有选中文本");
+                        else{
+                            info!("home-not-exists");
+                            window.once("home-ready", move |_| {
+                                info!("home-ready");
+                                app_handle_clone.emit_to("home", "update-input", json!({
+                                    "payload": text_clone,
+                                    "requestId": timestamp
+                                })).unwrap();
+                            });
+                        }
                     }
                 },
                 Err(e) => {
-                    warn!("获取选中文本失败: 发生错误: {}", e);
+                    warn!("获取选中文本失败: {}", e);
                 }
             }
         }
         ShortcutState::Released => {
-            // 按键释放时不执行任何操作
             info!("Shortcut released");
         }
     }
@@ -220,7 +225,6 @@ pub fn system_screenshot_window() {
             return;
         }
     };
-    
     state.0.lock().unwrap().replace_range(.., &ocr_result);
     let ocr_result_clone = ocr_result.clone();
     // 添加事件监听确保前端已准备好

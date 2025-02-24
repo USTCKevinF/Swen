@@ -9,6 +9,7 @@ import { StarFilled } from '@element-plus/icons-vue'
 const isFavorite = ref(false);
 
 const inputText = ref("");
+const currentRequestId = ref(0);
 const currentWindow = getCurrentWindow();
 let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 let unlisten: any = null;
@@ -46,7 +47,12 @@ const handleFavoriteClick = () => {
 // 监听后端发送的文本更新事件
 const listenInputUpdate = async () => {
   unlistenInput = await listen('update-input', (event: any) => {
-    inputText.value = (event.payload as string).trim();
+    const { payload, requestId } = event.payload;
+    // 只处理最新的请求
+    if (requestId && requestId > currentRequestId.value) {
+      currentRequestId.value = requestId;
+      inputText.value = payload.trim();
+    }
   });
 };
 
@@ -71,11 +77,12 @@ onMounted(async () => {
     
     isWindowFullyShown = true;
     
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // 添加初始化完成事件
     const appWindow = await getCurrentWebviewWindow();
     await appWindow.emit("home-ready");
+    console.log('home-ready');
     appWindow.show();
     
   } catch (err) {

@@ -49,7 +49,7 @@ const props = defineProps<{
   inputText: string
 }>();
 
-const thisRequestVersion = ref(Date.now());
+const currentRequestId = ref(0);
 const deepseekResponse = ref("");
 const isLoading = ref(false);
 
@@ -71,31 +71,23 @@ const { property: baseURL } = useConfig('llm.baseURL', '')
 const { property: apiKey } = useConfig('llm.apiKey', '')
 const { property: model } = useConfig('llm.model', '')
 
-async function getDeepseekExplanation() {
-  if (!props.inputText) return;
-  
+async function getDeepseekExplanation(payload: string) {
   // 生成新的时间戳作为请求ID
-  thisRequestVersion.value = Date.now();
-  const currentVersion = thisRequestVersion.value;
-  
   if (fetchStreamUnlisten) {
     fetchStreamUnlisten();
     fetchStreamUnlisten = null;
   }
   
   isLoading.value = true;
-  deepseekResponse.value = "";
   const systemPrompt = "你是一个包罗万象的知识专家，擅长于给用户解释其提出的概念，用户是一名好学且好奇的学生，会提供一些名词或者概念给你。规则：- 你需要详细地解答，并且以易懂的方式叙述你的观点 - 你的目标是让用户更深入的理解其提供的概念 - 无论用户提供的是什么语言，均用中文进行回复 - 输出完解释之后立刻停止，不要说类似如果你有更多的问题，欢迎继续提问的话.Please use $ instead of \\( and \\) for LaTeX math expressions.";
 
   try {
+    const timestampId = Date.now();
     fetchStreamUnlisten = await listen('fetch-stream-data', (event: any) => {
-      // 只处理匹配当前版本的响应
-      console.log('currentVersion: ', currentVersion, 'event.payload.request_id: ', event.payload.request_id);
-      if (event.payload.request_id !== currentVersion) {
-        console.log('忽略过期请求响应:', event.payload.request_id, '当前版本:', currentVersion);
+      const { message, responseId } = event.payload;  
+      if (!responseId || responseId < timestampId) {
         return;
       }
-      const { message } = event.payload;
       if (message && typeof message === 'string') {
         const messages = message.split('\n\n');
         messages.forEach(msg => {
@@ -103,6 +95,7 @@ async function getDeepseekExplanation() {
           try {
             // 检测到 [DONE] 时，更新状态并清理监听器
             if (msg.includes('[DONE]')) {
+              console.log('DONE');
               isLoading.value = false;
               if (fetchStreamUnlisten) {
                 fetchStreamUnlisten();
@@ -112,6 +105,8 @@ async function getDeepseekExplanation() {
             }
             const jsonStr = msg.replace(/^data: /, '');
             const data = JSON.parse(jsonStr);
+            // console.log('message: ', message, 'responseId: ', responseId, 'timestampId: ', timestampId);
+
             const content = data.choices[0]?.delta?.content;
             if (content) {
               deepseekResponse.value += content;
@@ -130,11 +125,10 @@ async function getDeepseekExplanation() {
         model: model.value,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: props.inputText }
+          { role: "user", content: payload }
         ],
         stream: true
       }),
-      requestId: currentVersion,
     });
   } catch (error) {
     console.error('流处理错误:', error);
@@ -171,16 +165,20 @@ async function copyToClipboard() {
 }
 
 function handleRedo() {
-  getDeepseekExplanation();
+  getDeepseekExplanation(props.inputText);
 }
 
 let unlistenInput: (() => void) | null = null;
 const listenInputUpdate = async () => {
-  unlistenInput = await listen('update-input', () => {
-    // 当输入更新时，清空旧内容并发起新的解释请求
-    deepseekResponse.value = "";
-    if (props.inputText.trim()) {
-      getDeepseekExplanation();
+  unlistenInput = await listen('update-input', (event: any) => {
+    const { payload, requestId } = event.payload;
+        // 只处理最新的请求
+    if (payload && requestId && requestId > currentRequestId.value) {
+      currentRequestId.value = requestId;
+      // 当输入更新时，清空旧内容并发起新的解释请求
+      deepseekResponse.value = "";
+      console.log('getDeepseekExplanation and payload: ', event); 
+      getDeepseekExplanation(payload);
     }
   });
 };
