@@ -111,14 +111,14 @@ const handlePinClick = () => {
       <el-header class="h-10  fixed top-0 left-0 right-0 z-10 flex items-center justify-end px-2" data-tauri-drag-region='true'>
         <div class="flex items-center gap-2">
           <div class="cursor-pointer" @click="handleFavoriteClick">
-            <el-icon :class="[{ 'text-yellow-400': isFavorite }, 'star-icon']" :size="25">
+            <!-- <el-icon :class="[{ 'text-yellow-400': isFavorite }, 'star-icon']" :size="25">
               <StarFilled/>
-            </el-icon>
+            </el-icon> -->
           </div>
           <div class="cursor-pointer" @click="handlePinClick">
             <img 
               src= '../assets/svg/pin.svg'
-              class="w-6 h-6 opacity-30"
+              class="w-6 h-6 opacity-30 hover:opacity-60 transition-opacity duration-200"
               :alt="isPinned ? 'Pinned' : 'Not Pinned'"
               :title="isPinned ? '取消钉住窗口' : '钉住窗口'"
               :class="{ 'pin-active': isPinned }"
