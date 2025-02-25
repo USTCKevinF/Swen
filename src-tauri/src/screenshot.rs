@@ -1,9 +1,8 @@
-use log::info;
-use log::error;
-use std::time::Instant;
-use std::{thread::sleep, time::Duration};
 use crate::APP;
 use dirs::cache_dir;
+use log::error;
+use log::info;
+use std::{thread::sleep, time::Duration};
 
 #[tauri::command]
 pub fn screenshot() -> Result<(), String> {
@@ -11,7 +10,7 @@ pub fn screenshot() -> Result<(), String> {
     let mut app_cache_dir_path = cache_dir().expect("获取缓存目录失败");
     app_cache_dir_path.push(&handle.config().identifier.clone());
     let screenshot_path = app_cache_dir_path.join("YYSM_Tool_screenshot.png");
-    
+
     // 确保目录存在
     if !app_cache_dir_path.exists() {
         std::fs::create_dir_all(&app_cache_dir_path).map_err(|e| e.to_string())?;
@@ -20,7 +19,6 @@ pub fn screenshot() -> Result<(), String> {
     // 删除旧截图文件（如果存在）
     let _ = std::fs::remove_file(&screenshot_path);
 
-    let capture_start = Instant::now();
     std::process::Command::new("screencapture")
         .arg("-x") // 添加静默模式参数
         .arg(screenshot_path.to_str().unwrap())
@@ -82,10 +80,10 @@ pub fn system_screenshot() -> Result<(), String> {
     // 删除旧截图文件（如果存在）
     let _ = std::fs::remove_file(&screenshot_path);
     std::process::Command::new("screencapture")
-        .arg("-i") 
+        .arg("-i")
         .arg(screenshot_path.to_str().unwrap())
         .output()
         .map_err(|e| e.to_string())?;
-    
+
     Ok(())
 }

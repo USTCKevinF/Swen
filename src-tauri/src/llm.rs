@@ -1,9 +1,9 @@
+use crate::APP;
 use futures_util::StreamExt;
-use tauri_plugin_http::reqwest::{header, Client};
+use serde_json;
 use std::str::from_utf8;
 use tauri::Emitter;
-use serde_json;
-use crate::APP;
+use tauri_plugin_http::reqwest::{header, Client};
 #[derive(Clone, serde::Serialize)]
 pub struct StreamPayload {
     pub message: String,
@@ -11,15 +11,11 @@ pub struct StreamPayload {
 }
 
 #[tauri::command]
-pub async fn receive_stream(
-    url: &str,
-    auth_token: &str,
-    prompt: &str,
-) -> Result<String, String> {
+pub async fn receive_stream(url: &str, auth_token: &str, prompt: &str) -> Result<String, String> {
     let app_handle = APP.get().unwrap();
     // 解析传入的 JSON 字符串
-    let prompt_data: serde_json::Value = serde_json::from_str(prompt)
-        .map_err(|e| format!("Failed to parse prompt JSON: {}", e))?;
+    let prompt_data: serde_json::Value =
+        serde_json::from_str(prompt).map_err(|e| format!("Failed to parse prompt JSON: {}", e))?;
 
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -30,7 +26,7 @@ pub async fn receive_stream(
     headers.insert(
         header::AUTHORIZATION,
         header::HeaderValue::from_str(auth_token)
-            .map_err(|e| format!("Invalid authorization token: {}", e))?
+            .map_err(|e| format!("Invalid authorization token: {}", e))?,
     );
 
     let client = Client::builder()
@@ -40,7 +36,7 @@ pub async fn receive_stream(
 
     let response = client
         .post(url)
-        .json(&prompt_data)  // 直接使用解析后的 JSON 数据
+        .json(&prompt_data) // 直接使用解析后的 JSON 数据
         .send()
         .await
         .map_err(|err| format!("failed to call API: {}", err))?;

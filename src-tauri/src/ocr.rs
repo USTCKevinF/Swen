@@ -1,7 +1,7 @@
 use dirs::cache_dir;
-use tauri::Manager;
-use std::path::PathBuf;
 use log::info;
+use std::path::PathBuf;
+use tauri::Manager;
 
 #[tauri::command(async)]
 #[cfg(target_os = "macos")]
