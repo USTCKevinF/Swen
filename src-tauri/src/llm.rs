@@ -7,7 +7,8 @@ use tauri_plugin_http::reqwest::{header, Client};
 #[derive(Clone, serde::Serialize)]
 pub struct StreamPayload {
     pub message: String,
-    pub responseId: u128,
+    #[serde(rename = "responseId")]
+    pub response_id: u128,
 }
 
 #[tauri::command]
@@ -57,7 +58,7 @@ pub async fn receive_stream(url: &str, auth_token: &str, prompt: &str) -> Result
                         "fetch-stream-data",
                         StreamPayload {
                             message: chunk.to_string(),
-                            responseId: timestamp,
+                            response_id: timestamp,
                         },
                     )
                     .unwrap();

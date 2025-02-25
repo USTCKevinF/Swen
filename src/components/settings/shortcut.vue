@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full">
+  <div class="w-4/5 mx-auto">
     <div class="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
       <div class="bg-white p-2">
         <div class="flex items-center gap-2 mb-4">
