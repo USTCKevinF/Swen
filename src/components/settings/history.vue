@@ -113,7 +113,7 @@ onMounted(async () => {
 <template>
   <div class="history-container">
     <!-- 历史记录列表 -->
-    <div class="mb-4 flex-grow overflow-auto">
+    <div class="mb-4 flex-grow overflow-auto scrollbar-hide">
       <el-table 
         :data="historyData" 
         style="width: 100%" 
@@ -205,6 +205,16 @@ onMounted(async () => {
 .conversation-detail {
   max-height: 60vh;
   overflow-y: auto;
+}
+
+/* 隐藏滚动条但保留滚动功能 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
 
 :deep(.el-table .cell) {
