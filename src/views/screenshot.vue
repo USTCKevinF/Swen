@@ -53,30 +53,27 @@ const initScreenshot = async () => {
   try {
     const monitor = await currentMonitor()
     const position = monitor.position
-    await invoke('screenshot', { x: position.x, y: position.y })
+    
     const appCacheDirPath = await appCacheDir()
     const filePath = await join(appCacheDirPath, 'YYSM_Tool_screenshot.png')
-    console.log("原始文件路径:", filePath)
     const assetUrl = convertFileSrc(filePath)
-    console.log("转换后的URL:", assetUrl)
-    imgUrl.value = assetUrl
     
-    // 添加图片加载错误处理
-    if (imgRef.value) {
-      imgRef.value.onerror = (e) => {
-        console.error('图片加载失败:', e)
-      }
-    }
-    
-    // 返回一个 Promise，等待图片加载完成
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(assetUrl)
+    // 使用新的Image对象预加载
+    const img = new Image()
+    await new Promise((resolve, reject) => {
+      img.onload = resolve
       img.onerror = reject
       img.src = assetUrl
     })
+    
+    // 图片加载完成后再设置URL并显示窗口
+    imgUrl.value = assetUrl
+    await currentWindow.show()
+    await currentWindow.setFocus()
+    
   } catch (error) {
     console.error('截图初始化失败:', error)
+    await currentWindow.close()
     throw error
   }
 }
