@@ -61,7 +61,9 @@
             "global-shortcut:allow-register",
             "global-shortcut:allow-unregister",
             "http:allow-fetch",
-            "http:default"
+            "http:default",
+            "sql:default",
+            "sql:allow-execute"
           ]
         }
       ]

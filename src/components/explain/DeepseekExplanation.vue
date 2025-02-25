@@ -44,6 +44,9 @@ import { ElMessage } from 'element-plus'
 import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core';
+import { COMPREHENSIVE_EXPLANATION_PROMPT } from '../../utils/prompts';
+
+const systemPrompt = COMPREHENSIVE_EXPLANATION_PROMPT;
 
 const props = defineProps<{
   inputText: string
@@ -79,8 +82,6 @@ async function getDeepseekExplanation(payload: string) {
   }
   
   isLoading.value = true;
-  const systemPrompt = "你是一个包罗万象的知识专家，擅长于给用户解释其提出的概念，用户是一名好学且好奇的学生，会提供一些名词或者概念给你。规则：- 你需要详细地解答，并且以易懂的方式叙述你的观点 - 你的目标是让用户更深入的理解其提供的概念 - 无论用户提供的是什么语言，均用中文进行回复 - 输出完解释之后立刻停止，不要说类似如果你有更多的问题，欢迎继续提问的话.Please use $ instead of \\( and \\) for LaTeX math expressions.";
-
   try {
     const timestampId = Date.now();
     fetchStreamUnlisten = await listen('fetch-stream-data', (event: any) => {
