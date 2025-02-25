@@ -124,9 +124,12 @@ pub fn home_window() -> (WebviewWindow, bool) {
     window
         .set_min_size(Some(tauri::LogicalSize::new(400, 300)))
         .unwrap();
-    window.set_size(tauri::LogicalSize::new(500, 400)).unwrap();
     window.set_focus().unwrap();
 
+    let remember_window_size = get("rememberSize").unwrap();
+    if remember_window_size == false {
+        window.set_size(tauri::LogicalSize::new(500, 400)).unwrap();
+    }
     let binding = get("windowPosition").unwrap();
     let window_position = binding.as_str().unwrap();
     if window_position == "center" {
