@@ -1,15 +1,13 @@
 <template>
   <div class="option-item">
-    <!-- <div class="option-header" @click="getDeepseekExplanation">
-      <span>DeepSeek 解释</span>
-      <div class="header-actions">
-        <span class="loading-icon" v-if="isLoading">
-          <span class="spinner"></span>
-        </span>
-        <el-icon v-else class="arrow"><ArrowRight /></el-icon>
+    <div 
+      class="text-[13px] mb-4 pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden"
+    >
+      <div class="overflow-hidden text-ellipsis whitespace-nowrap">
+        {{"Q: " + inputText }}
       </div>
-    </div> -->
-    <div v-if="deepseekResponse" class="flex flex-col  selectable-text">
+    </div>
+    <div v-if="deepseekResponse" class="flex flex-col  selectable-text bg-gray-100 p-1 rounded-lg">
       <MdPreview 
         :modelValue="deepseekResponse"
         :preview-theme="'default'"
@@ -45,16 +43,13 @@ import { ElMessage } from 'element-plus'
 import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core';
-import { COMPREHENSIVE_EXPLANATION_PROMPT } from '../../utils/prompts';
 import { saveChatHistory } from '../../utils/database';
 
-const systemPrompt = COMPREHENSIVE_EXPLANATION_PROMPT;
-
 const props = defineProps<{
-  inputText: string
+  messages: Array<{role: string, content: string}>
 }>();
 
-const currentRequestId = ref(0);
+const inputText = ref("");
 const deepseekResponse = ref("");
 const isLoading = ref(false);
 
@@ -68,6 +63,18 @@ watch(deepseekResponse, () => {
     }
   });
 });
+
+// 监听messages变化，更新inputText并触发解释请求
+watch(() => props.messages, (newMessages: Array<{role: string, content: string}>) => {
+  if (newMessages && newMessages.length > 0) {
+    // 获取最后一个用户消息
+    const userMessage = newMessages.find((msg: {role: string, content: string}) => msg.role === "user");
+    if (userMessage) {
+      inputText.value = userMessage.content;
+      getDeepseekExplanation(userMessage.content);
+    }
+  }
+}, { immediate: true, deep: true });
 
 // 当前流事件监听取消函数
 let fetchStreamUnlisten: (() => void) | null = null;
@@ -146,10 +153,7 @@ async function getDeepseekExplanation(payload: string) {
       authToken: `Bearer ${apiKey.value}`,
       prompt: JSON.stringify({
         model: model.value,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: payload }
-        ],
+        messages: props.messages, // 直接使用传入的messages
         stream: true
       }),
     });
@@ -188,32 +192,10 @@ async function copyToClipboard() {
 }
 
 function handleRedo() {
-  getDeepseekExplanation(props.inputText);
+  getDeepseekExplanation(inputText.value);
 }
 
-let unlistenInput: (() => void) | null = null;
-const listenInputUpdate = async () => {
-  unlistenInput = await listen('update-input', (event: any) => {
-    const { payload, requestId } = event.payload;
-        // 只处理最新的请求
-    if (payload && requestId && requestId > currentRequestId.value) {
-      currentRequestId.value = requestId;
-      // 当输入更新时，清空旧内容并发起新的解释请求
-      deepseekResponse.value = "";
-      console.log('getDeepseekExplanation and payload: ', event); 
-      getDeepseekExplanation(payload);
-    }
-  });
-};
-
-onMounted(async () => {
-  await listenInputUpdate();
-});
-
 onUnmounted(() => {
-  if (unlistenInput) {
-    unlistenInput();
-  }
   if (fetchStreamUnlisten) {
     fetchStreamUnlisten();
   }

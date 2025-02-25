@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
 import { listen } from '@tauri-apps/api/event';
-import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
+import { ElMessage } from 'element-plus';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { ElMessage } from 'element-plus';
-import { StarFilled } from '@element-plus/icons-vue'
+import { ref, onMounted, onUnmounted } from 'vue';
+import { COMPREHENSIVE_EXPLANATION_PROMPT } from '../utils/prompts';
+import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
+
 const isFavorite = ref(false);
 
 const inputText = ref("");
+const messages = ref<Array<{role: string, content: string}>>([]);
 const currentRequestId = ref(0);
 const currentWindow = getCurrentWindow();
 let blurTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -52,6 +54,11 @@ const listenInputUpdate = async () => {
     if (requestId && requestId > currentRequestId.value) {
       currentRequestId.value = requestId;
       inputText.value = payload.trim();
+      // 更新messages列表
+      messages.value = [
+        { role: "system", content: COMPREHENSIVE_EXPLANATION_PROMPT },
+        { role: "user", content: payload.trim() }
+      ];
     }
   });
 };
@@ -108,7 +115,7 @@ const handlePinClick = () => {
 <template>
   <div class="h-full rounded-lg backdrop-blur-sm relative bg-[#f9f9f9]">
     <el-container class="h-full">
-      <el-header class="h-10  fixed top-0 left-0 right-0 z-10 flex items-center justify-end px-2" data-tauri-drag-region='true'>
+      <el-header class="h-10 fixed top-0 left-0 right-0 z-10 flex items-center justify-end px-2" data-tauri-drag-region='true'>
         <div class="flex items-center gap-2">
           <div class="cursor-pointer" @click="handleFavoriteClick">
             <!-- <el-icon :class="[{ 'text-yellow-400': isFavorite }, 'star-icon']" :size="25">
@@ -127,14 +134,7 @@ const handlePinClick = () => {
         </div>
       </el-header>
       <el-main class="p-3 mt-8 overflow-y-auto">
-        <div 
-          class="text-[13px] mb-4 pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden"
-        >
-          <div class="overflow-hidden text-ellipsis whitespace-nowrap">
-            {{"Q: " + inputText }}
-          </div>
-        </div>
-        <DeepseekExplanation :inputText="inputText" />
+        <DeepseekExplanation :messages="messages"/>
       </el-main>
     </el-container>
   </div>
