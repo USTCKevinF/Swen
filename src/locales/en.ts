@@ -33,6 +33,15 @@ export default {
       saveSuccess: 'Settings Saved',
       cancelChanges: 'Changes Cancelled'
     },
+    history: {
+      title: 'History',
+      question: 'Question',
+      response: 'Response',
+      time: 'Time',
+      model: 'Model',
+      deleteConfirm: 'Are you sure you want to delete this record?',
+      deleteSuccess: 'Deleted successfully'
+    },
     about: {
       title: 'About'
     },
@@ -40,5 +49,11 @@ export default {
       title: 'Buy Me a Coffee',
       description: 'If you find this tool helpful, you can buy me a coffee :)'
     }
+  },
+  common: {
+    warning: 'Warning',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    operations: 'Operations'
   }
 } 

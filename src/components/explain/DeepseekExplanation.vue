@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore 忽略Vue导入错误
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
@@ -45,6 +46,7 @@ import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core';
 import { COMPREHENSIVE_EXPLANATION_PROMPT } from '../../utils/prompts';
+import { saveChatHistory } from '../../utils/database';
 
 const systemPrompt = COMPREHENSIVE_EXPLANATION_PROMPT;
 
@@ -82,6 +84,7 @@ async function getDeepseekExplanation(payload: string) {
   }
   
   isLoading.value = true;
+  deepseekResponse.value = ""; // 清空之前的响应
   try {
     const timestampId = Date.now();
     fetchStreamUnlisten = await listen('fetch-stream-data', (event: any) => {
@@ -98,6 +101,25 @@ async function getDeepseekExplanation(payload: string) {
             if (msg.includes('[DONE]')) {
               console.log('DONE');
               isLoading.value = false;
+              
+              // 聊天完成后保存到数据库
+              if (deepseekResponse.value) {
+                // 创建一个包含当前本地时间的对象
+                const now = new Date();
+                const localTimestamp = now.toISOString();
+                
+                saveChatHistory({
+                  content: payload,
+                  response: deepseekResponse.value,
+                  model: model.value || 'DeepSeek',
+                  timestamp: localTimestamp // 添加本地时间戳
+                }).then(success => {
+                  if (success) {
+                    console.log('聊天记录已保存到数据库');
+                  }
+                });
+              }
+              
               if (fetchStreamUnlisten) {
                 fetchStreamUnlisten();
                 fetchStreamUnlisten = null;

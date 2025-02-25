@@ -33,6 +33,15 @@ export default {
       saveSuccess: '设置已保存',
       cancelChanges: '已取消修改'
     },
+    history: {
+      title: '历史记录',
+      question: '问题',
+      response: '回答',
+      time: '时间',
+      model: '使用模型',
+      deleteConfirm: '确定要删除此记录吗？',
+      deleteSuccess: '删除成功'
+    },
     about: {
       title: '关于应用'
     },
@@ -40,5 +49,11 @@ export default {
       title: '赞助奶茶',
       description: '如果觉得这个工具对你有帮助，可以请我喝杯奶茶 :)'
     }
+  },
+  common: {
+    warning: '警告',
+    confirm: '确认',
+    cancel: '取消',
+    operations: '操作'
   }
 } 
