@@ -1,33 +1,41 @@
 <template>
   <div class="option-item">
-    <div 
-      class="text-[13px] mb-4 pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden"
-    >
-      <div class="overflow-hidden text-ellipsis whitespace-nowrap">
-        {{"Q: " + inputText }}
+    <div class="flex flex-col gap-4">
+      <!-- 对话历史 -->
+      <template v-for="(item, index) in chatHistory" :key="index">
+        <!-- 用户问题 -->
+        <div class="text-[13px] pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden">
+          <div class="overflow-hidden text-ellipsis whitespace-nowrap">
+            {{"Q: " + item.question }}
+          </div>
+        </div>
+        <!-- AI回答 -->
+        <div v-if="item.answer" class="flex flex-col selectable-text bg-gray-100 p-3 rounded-lg mb-4">
+          <MdPreview 
+            :modelValue="item.answer"
+            :preview-theme="'default'"
+            class="custom-md-preview"
+          />
+        </div>
+      </template>
+
+      <!-- 当前回答（如果正在加载） -->
+      <div v-if="isLoading" class="flex flex-col selectable-text bg-gray-100 p-3 rounded-lg mb-4">
+        <MdPreview 
+          :modelValue="deepseekResponse"
+          :preview-theme="'default'"
+          class="custom-md-preview"
+        />
       </div>
-    </div>
-    <div v-if="deepseekResponse" class="flex flex-col  selectable-text bg-gray-100 p-1 rounded-lg">
-      <MdPreview 
-        :modelValue="deepseekResponse"
-        :preview-theme="'default'"
-        class="custom-md-preview"
-      />
-      <div v-if="!isLoading" class="relative flex items-center gap-2.5 pl-3.5 pb-2.5 bg-gray-100">
-        <div class="relative inline-block">
-          <el-icon 
-            @click="copyToClipboard"
-            class="w-6 h-6 cursor-pointer opacity-90 hover:opacity-100"
-          ><DocumentCopy /></el-icon>
-          <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">复制</span>
-        </div>
-        <div class="relative inline-block">
-          <el-icon 
-            @click="handleRedo"
-            class="w-6 h- cursor-pointer opacity-90 hover:opacity-100"
-          ><RefreshRight /></el-icon>
-          <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">重新生成</span>
-        </div>
+
+      <!-- 输入框区域 -->
+      <div class="flex gap-2 mt-4">
+        <el-input
+          v-model="newQuestion"
+          :placeholder="isLoading ? '正在回答中...' : '请输入您的问题'"
+          :disabled="isLoading"
+          @keyup.enter="handleSendQuestion"
+        />
       </div>
     </div>
   </div>
@@ -38,8 +46,6 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
-import { DocumentCopy, RefreshRight } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core';
@@ -49,14 +55,22 @@ const props = defineProps<{
   messages: Array<{role: string, content: string}>
 }>();
 
-const inputText = ref("");
+const emit = defineEmits(['update:messages']);
+
+interface ChatMessage {
+  question: string;
+  answer: string;
+}
+
+const chatHistory = ref<ChatMessage[]>([]);
+const newQuestion = ref("");
 const deepseekResponse = ref("");
 const isLoading = ref(false);
+const localMessages = ref<Array<{role: string, content: string}>>([]);
 
 // 添加一个用于跟踪内容变化的 watch
 watch(deepseekResponse, () => {
   nextTick(() => {
-    // 获取 el-main 元素
     const mainElement = document.querySelector('.el-main');
     if (mainElement) {
       mainElement.scrollTop = mainElement.scrollHeight;
@@ -64,14 +78,15 @@ watch(deepseekResponse, () => {
   });
 });
 
-// 监听messages变化，更新inputText并触发解释请求
+// 监听初始messages变化
 watch(() => props.messages, (newMessages: Array<{role: string, content: string}>) => {
   if (newMessages && newMessages.length > 0) {
-    // 获取最后一个用户消息
-    const userMessage = newMessages.find((msg: {role: string, content: string}) => msg.role === "user");
-    if (userMessage) {
-      inputText.value = userMessage.content;
-      getDeepseekExplanation(userMessage.content);
+    if (localMessages.value.length < newMessages.length) {
+      localMessages.value = [...newMessages];
+      const userMessage = newMessages.find((msg: {role: string, content: string}) => msg.role === "user");
+      if (userMessage && chatHistory.value.length === 0) {
+        getDeepseekExplanation(userMessage.content);
+      }
     }
   }
 }, { immediate: true, deep: true });
@@ -83,15 +98,34 @@ const { property: baseURL } = useConfig('llm.baseURL', '')
 const { property: apiKey } = useConfig('llm.apiKey', '')
 const { property: model } = useConfig('llm.model', '')
 
+async function handleSendQuestion() {
+  if (!newQuestion.value.trim() || isLoading.value) return;
+  
+  const question = newQuestion.value.trim();
+  newQuestion.value = "";
+  
+  // 添加用户消息到messages
+  localMessages.value.push({ role: "user", content: question });
+  
+  // 调用API获取回答
+  await getDeepseekExplanation(question);
+}
+
 async function getDeepseekExplanation(payload: string) {
-  // 生成新的时间戳作为请求ID
   if (fetchStreamUnlisten) {
     fetchStreamUnlisten();
     fetchStreamUnlisten = null;
   }
   
   isLoading.value = true;
-  deepseekResponse.value = ""; // 清空之前的响应
+  deepseekResponse.value = "";
+  
+  // 添加新的问题到历史记录
+  chatHistory.value.push({
+    question: payload,
+    answer: ""
+  });
+  
   try {
     const timestampId = Date.now();
     fetchStreamUnlisten = await listen('fetch-stream-data', (event: any) => {
@@ -104,14 +138,21 @@ async function getDeepseekExplanation(payload: string) {
         messages.forEach(msg => {
           if (!msg.trim()) return;
           try {
-            // 检测到 [DONE] 时，更新状态并清理监听器
             if (msg.includes('[DONE]')) {
               console.log('DONE');
               isLoading.value = false;
               
-              // 聊天完成后保存到数据库
+              // 更新最后一条对话的答案
+              if (chatHistory.value.length > 0) {
+                chatHistory.value[chatHistory.value.length - 1].answer = deepseekResponse.value;
+              }
+              
+              // 添加assistant的回复到messages
+              localMessages.value.push({ role: "assistant", content: deepseekResponse.value });
+              emit('update:messages', localMessages.value);
+              
+              // 保存到数据库
               if (deepseekResponse.value) {
-                // 创建一个包含当前本地时间的对象
                 const now = new Date();
                 const localTimestamp = now.toISOString();
                 
@@ -119,7 +160,7 @@ async function getDeepseekExplanation(payload: string) {
                   content: payload,
                   response: deepseekResponse.value,
                   model: model.value || 'DeepSeek',
-                  timestamp: localTimestamp // 添加本地时间戳
+                  timestamp: localTimestamp
                 }).then(success => {
                   if (success) {
                     console.log('聊天记录已保存到数据库');
@@ -135,7 +176,6 @@ async function getDeepseekExplanation(payload: string) {
             }
             const jsonStr = msg.replace(/^data: /, '');
             const data = JSON.parse(jsonStr);
-            // console.log('message: ', message, 'responseId: ', responseId, 'timestampId: ', timestampId);
 
             const content = data.choices[0]?.delta?.content;
             if (content) {
@@ -153,7 +193,7 @@ async function getDeepseekExplanation(payload: string) {
       authToken: `Bearer ${apiKey.value}`,
       prompt: JSON.stringify({
         model: model.value,
-        messages: props.messages, // 直接使用传入的messages
+        messages: localMessages.value,
         stream: true
       }),
     });
@@ -161,13 +201,11 @@ async function getDeepseekExplanation(payload: string) {
     console.error('流处理错误:', error);
     deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
     isLoading.value = false;
-    // 发生错误时也需要清理监听器
     if (fetchStreamUnlisten) {
       fetchStreamUnlisten();
       fetchStreamUnlisten = null;
     }
   } finally {
-    // finally 块作为最后的保险，确保在异常情况下也能清理监听器
     if (fetchStreamUnlisten) {
       fetchStreamUnlisten();
       fetchStreamUnlisten = null;
@@ -175,25 +213,19 @@ async function getDeepseekExplanation(payload: string) {
   }
 }
 
-async function copyToClipboard() {
-  try {
-    await navigator.clipboard.writeText(deepseekResponse.value);
-    ElMessage({
-      message: '复制成功',
-      type: 'success',
-    });
-  } catch (err) {
-    console.error('复制失败:', err);
-    ElMessage({
-      message: '复制失败',
-      type: 'error',
-    });
-  }
-}
+// 添加清空状态的方法
+const clearState = () => {
+  chatHistory.value = [];
+  newQuestion.value = "";
+  deepseekResponse.value = "";
+  isLoading.value = false;
+  localMessages.value = [];
+};
 
-function handleRedo() {
-  getDeepseekExplanation(inputText.value);
-}
+// 暴露方法给父组件
+defineExpose({
+  clearState
+});
 
 onUnmounted(() => {
   if (fetchStreamUnlisten) {
@@ -203,14 +235,14 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.copy-button {
-  display: none;
-}
-
 .selectable-text {
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
+}
+
+.el-input {
+  flex: 1;
 }
 </style> 

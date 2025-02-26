@@ -19,6 +19,9 @@ let unlistenInput: any = null;
 let isWindowFullyShown = false;
 const isPinned = ref(false);
 
+// 添加ref用于获取DeepseekExplanation组件实例
+const deepseekExplanationRef = ref();
+
 // 监听失去焦点事件
 const listenBlur = async () => {
   unlisten = await listen('tauri://blur', () => {
@@ -27,6 +30,12 @@ const listenBlur = async () => {
         if (blurTimeout) {
           clearTimeout(blurTimeout);
         }
+        // 清空组件状态
+        deepseekExplanationRef.value?.clearState();
+        // 清空输入文本和消息
+        inputText.value = "";
+        messages.value = [];
+        
         blurTimeout = setTimeout(async () => {
           await currentWindow.hide();
         }, 100);
@@ -134,7 +143,10 @@ const handlePinClick = () => {
         </div>
       </el-header>
       <el-main class="p-3 mt-8 overflow-y-auto">
-        <DeepseekExplanation :messages="messages"/>
+        <DeepseekExplanation 
+          ref="deepseekExplanationRef"
+          :messages="messages"
+        />
       </el-main>
     </el-container>
   </div>
