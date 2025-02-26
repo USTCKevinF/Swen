@@ -1,42 +1,45 @@
 <template>
-  <div class="option-item">
-    <div class="flex flex-col gap-4">
-      <!-- 对话历史 -->
-      <template v-for="(item, index) in chatHistory" :key="index">
-        <!-- 用户问题 -->
-        <div class="text-[13px] pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden">
-          <div class="overflow-hidden text-ellipsis whitespace-nowrap">
-            {{"Q: " + item.question }}
+  <div class="option-item flex flex-col h-full">
+    <!-- 聊天历史区域 -->
+    <div class="flex-1 overflow-y-auto">
+      <div class="flex flex-col gap-2">
+        <!-- 对话历史 -->
+        <template v-for="(item, index) in chatHistory" :key="index">
+          <!-- 用户问题 -->
+          <div class="text-[13px] pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden">
+            <div class="overflow-hidden text-ellipsis whitespace-nowrap">
+              {{"Q: " + item.question }}
+            </div>
           </div>
-        </div>
-        <!-- AI回答 -->
-        <div v-if="item.answer" class="flex flex-col selectable-text bg-gray-100 p-3 rounded-lg mb-4">
+          <!-- AI回答 -->
+          <div v-if="item.answer" class="flex flex-col selectable-text bg-gray-100 p-3 rounded-lg mb-4">
+            <MdPreview 
+              :modelValue="item.answer"
+              :preview-theme="'default'"
+              class="custom-md-preview"
+            />
+          </div>
+        </template>
+
+        <!-- 当前回答（如果正在加载） -->
+        <div v-if="isLoading" class="flex flex-col selectable-text bg-gray-100 p-3 rounded-lg mb-4">
           <MdPreview 
-            :modelValue="item.answer"
+            :modelValue="deepseekResponse"
             :preview-theme="'default'"
             class="custom-md-preview"
           />
         </div>
-      </template>
-
-      <!-- 当前回答（如果正在加载） -->
-      <div v-if="isLoading" class="flex flex-col selectable-text bg-gray-100 p-3 rounded-lg mb-4">
-        <MdPreview 
-          :modelValue="deepseekResponse"
-          :preview-theme="'default'"
-          class="custom-md-preview"
-        />
       </div>
+    </div>
 
-      <!-- 输入框区域 -->
-      <div class="flex gap-2 mt-4">
-        <el-input
-          v-model="newQuestion"
-          :placeholder="isLoading ? '正在回答中...' : '请输入您的问题'"
-          :disabled="isLoading"
-          @keyup.enter="handleSendQuestion"
-        />
-      </div>
+    <!-- 输入框区域 - 固定在底部 -->
+    <div class="flex gap-2 sticky bottom-0 py-1">
+      <el-input
+        v-model="newQuestion"
+        :placeholder="isLoading ? '正在回答中..' : '继续提问'"
+        :disabled="isLoading"
+        @keyup.enter="handleSendQuestion"
+      />
     </div>
   </div>
 </template>
@@ -68,12 +71,13 @@ const deepseekResponse = ref("");
 const isLoading = ref(false);
 const localMessages = ref<Array<{role: string, content: string}>>([]);
 
-// 添加一个用于跟踪内容变化的 watch
+// 修改 watch 逻辑，使用正确的滚动容器
 watch(deepseekResponse, () => {
   nextTick(() => {
-    const mainElement = document.querySelector('.el-main');
-    if (mainElement) {
-      mainElement.scrollTop = mainElement.scrollHeight;
+    // 修改选择器，直接选择组件内的滚动容器
+    const scrollContainer = document.querySelector('.option-item > .flex-1');
+    if (scrollContainer) {
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
     }
   });
 });
@@ -264,5 +268,10 @@ onUnmounted(() => {
 
 .el-input {
   flex: 1;
+}
+
+.option-item {
+  height: 100%;
+  position: relative;
 }
 </style> 
