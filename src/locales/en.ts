@@ -31,7 +31,8 @@ export default {
       save: 'Save',
       cancel: 'Cancel',
       saveSuccess: 'Settings Saved',
-      cancelChanges: 'Changes Cancelled'
+      cancelChanges: 'Changes Cancelled',
+      maxContextLength: 'Max Context Length'
     },
     history: {
       title: 'History',

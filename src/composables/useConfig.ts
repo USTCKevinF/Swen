@@ -26,17 +26,20 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
 
   // 同步到 State (Store -> State) 
   const syncToState = async (value: any) => {
+    console.log('syncToState:', value)
     if (value !== null) {
       setPropertyState(value)
       isLoaded.value = true
     } else {
       try {
         const storeValue = await store.get(key)
-        if (storeValue === null) {
+        if (storeValue === null || storeValue === undefined) {
+          console.log('storeValue is null', defaultValue)
           setPropertyState(defaultValue)
           await store.set(key, defaultValue)
           await store.save()
         } else {
+          console.log('storeValue is not null', storeValue)
           setPropertyState(storeValue)
         }
         isLoaded.value = true

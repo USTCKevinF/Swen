@@ -97,6 +97,7 @@ let fetchStreamUnlisten: (() => void) | null = null;
 const { property: baseURL } = useConfig('llm.baseURL', '')
 const { property: apiKey } = useConfig('llm.apiKey', '')
 const { property: model } = useConfig('llm.model', '')
+const { property: maxContextLength } = useConfig('llm.maxContextLength', 6)
 
 async function handleSendQuestion() {
   if (!newQuestion.value.trim() || isLoading.value) return;
@@ -170,13 +171,27 @@ async function getDeepseekExplanation(payload: string) {
         });
       }
     });
+    let contextMessages = [];
     
+    if (localMessages.value.length > maxContextLength.value * 2 + 1) {
+      contextMessages.push(localMessages.value[0]);
+
+      // 根据maxContextLength截取消息
+      const startIdx = localMessages.value.length - (maxContextLength.value * 2 + 1);
+      const messages = localMessages.value.slice(startIdx, startIdx + maxContextLength.value * 2 + 1);
+      contextMessages.push(...messages);
+    }
+    else{
+      contextMessages = localMessages.value;
+    }
+
+    console.log('contextMessages:', contextMessages, localMessages.value)
     await invoke('receive_stream', {
       url: `${baseURL.value}/chat/completions`,
       authToken: `Bearer ${apiKey.value}`,
       prompt: JSON.stringify({
         model: model.value,
-        messages: localMessages.value,
+        messages: contextMessages,
         stream: true
       }),
     });

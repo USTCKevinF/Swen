@@ -31,7 +31,8 @@ export default {
       save: '保存',
       cancel: '取消',
       saveSuccess: '设置已保存',
-      cancelChanges: '已取消修改'
+      cancelChanges: '已取消修改',
+      maxContextLength: '最大上下文长度'
     },
     history: {
       title: '历史记录',
