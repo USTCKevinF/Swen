@@ -232,7 +232,7 @@ watch(allConfigLoaded, (loaded: boolean) => {
 
 .el-form-item :deep(.el-form-item__label) {
     white-space: nowrap;
-    min-width: 140px;
+    min-width: 180px;
 }
 
 .el-form-item :deep(.el-form-item__content) {

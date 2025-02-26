@@ -41,7 +41,13 @@ export default {
       time: 'Time',
       model: 'Model',
       deleteConfirm: 'Are you sure you want to delete this record?',
-      deleteSuccess: 'Deleted successfully'
+      deleteSuccess: 'Deleted successfully',
+      deleteFailed: 'Failed to delete record',
+      clearAll: 'Clear All',
+      clearAllConfirm: 'Are you sure you want to clear all history? This action cannot be undone!',
+      clearAllSuccess: 'All history records have been cleared',
+      clearAllFailed: 'Failed to clear history records',
+      loadFailed: 'Failed to load history records'
     },
     about: {
       title: 'About'
@@ -56,5 +62,12 @@ export default {
     confirm: 'Confirm',
     cancel: 'Cancel',
     operations: 'Operations'
+  },
+  explain: {
+    copyAnswer: 'Copy Answer',
+    answering: 'Answering...',
+    continueAsking: 'Continue Asking',
+    copySuccess: 'Copied Successfully',
+    copyFailed: 'Copy Failed'
   }
 } 

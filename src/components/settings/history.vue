@@ -4,7 +4,7 @@ import { Calendar, Delete } from '@element-plus/icons-vue';
 import { ElMessageBox, ElMessage } from 'element-plus';
 // @ts-ignore 忽略Vue导入错误
 import { ref, reactive, onMounted } from 'vue';
-import { initDatabase, getPaginatedChatHistory, deleteChatHistory, ChatHistory, extractTitle } from '../../utils/database';
+import { initDatabase, getPaginatedChatHistory, deleteChatHistory, clearAllChatHistory, ChatHistory, extractTitle } from '../../utils/database';
 
 const { t } = useI18n();
 
@@ -81,6 +81,37 @@ const deleteRecord = (id: number): void => {
     });
 };
 
+// 清空所有历史记录
+const clearAllHistory = (): void => {
+  ElMessageBox.confirm(
+    t('settings.history.clearAllConfirm'),
+    t('common.warning'),
+    {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning',
+    }
+  )
+    .then(async () => {
+      const success = await clearAllChatHistory();
+      if (success) {
+        ElMessage({
+          type: 'success',
+          message: t('settings.history.clearAllSuccess'),
+        });
+        loadHistoryData(); // 重新加载数据
+      } else {
+        ElMessage({
+          type: 'error',
+          message: t('settings.history.clearAllFailed'),
+        });
+      }
+    })
+    .catch(() => {
+      // 用户取消清空操作
+    });
+};
+
 // 格式化日期
 const formatDate = (date: Date | string | null | undefined): string => {
   if (!date) return '';
@@ -114,6 +145,18 @@ onMounted(async () => {
   <div class="history-container">
     <!-- 历史记录列表 -->
     <div class="mb-4 flex-grow overflow-auto scrollbar-hide">
+      <!-- 添加清空按钮 -->
+      <div class="flex justify-end mb-2">
+        <el-button 
+          type="danger" 
+          size="small" 
+          @click="clearAllHistory"
+          :disabled="historyData.length === 0"
+        >
+          {{ t('settings.history.clearAll') }}
+        </el-button>
+      </div>
+      
       <el-table 
         :data="historyData" 
         style="width: 100%" 
@@ -139,7 +182,7 @@ onMounted(async () => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column :label="t('common.operations')" width="50" >
+        <el-table-column  width="50" >
           <template #default="{ row }">
               <el-button type="danger" size="small" circle @click.stop="deleteRecord(row.id)">
                 <el-icon><Delete /></el-icon>

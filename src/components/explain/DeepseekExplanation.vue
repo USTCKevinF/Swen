@@ -18,6 +18,22 @@
               :preview-theme="'default'"
               class="custom-md-preview"
             />
+            <div class="flex justify-start mt-1 hover:cursor-pointer">
+              <el-tooltip
+                :content="t('explain.copyAnswer')"
+                placement="top"
+                effect="light"
+              >
+                <el-button 
+                  type="info" 
+                  size="small" 
+                  link
+                  @click="copyAnswer(item.answer)"
+                >
+                  <img src="../../assets/svg/copydocument.svg" class="w-4 h-4 " />
+                </el-button>
+              </el-tooltip>
+            </div>
           </div>
         </template>
 
@@ -36,7 +52,7 @@
     <div class="flex gap-2 sticky bottom-0 py-1">
       <el-input
         v-model="newQuestion"
-        :placeholder="isLoading ? '正在回答中..' : '继续提问'"
+        :placeholder="isLoading ? t('explain.answering') : t('explain.continueAsking')"
         :disabled="isLoading"
         @keyup.enter="handleSendQuestion"
       />
@@ -53,6 +69,10 @@ import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core';
 import { saveChatHistory } from '../../utils/database';
+import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   messages: Array<{role: string, content: string}>
@@ -244,6 +264,16 @@ const saveMultiChatHistory = () => {
     timestamp: now.toISOString()
   });
 }
+
+const copyAnswer = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    ElMessage.success(t('explain.copySuccess'));
+  } catch (err) {
+    console.error('复制失败:', err);
+    ElMessage.error(t('explain.copyFailed'));
+  }
+};
 
 // 暴露方法给父组件
 defineExpose({

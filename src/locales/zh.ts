@@ -41,7 +41,13 @@ export default {
       time: '时间',
       model: '使用模型',
       deleteConfirm: '确定要删除此记录吗？',
-      deleteSuccess: '删除成功'
+      deleteSuccess: '删除成功',
+      deleteFailed: '删除失败',
+      clearAll: '清空所有记录',
+      clearAllConfirm: '确定要清空所有历史记录吗？此操作不可恢复！',
+      clearAllSuccess: '所有历史记录已清空',
+      clearAllFailed: '清空历史记录失败',
+      loadFailed: '加载历史记录失败'
     },
     about: {
       title: '关于应用'
@@ -56,5 +62,12 @@ export default {
     confirm: '确认',
     cancel: '取消',
     operations: '操作'
+  },
+  explain: {
+    copyAnswer: '复制回答',
+    answering: '正在回答中..',
+    continueAsking: '继续提问',
+    copySuccess: '复制成功',
+    copyFailed: '复制失败'
   }
 } 
