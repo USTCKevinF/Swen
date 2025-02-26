@@ -7,7 +7,8 @@ import Shortcut from '../components/settings/shortcut.vue';
 import Model from '../components/settings/model.vue';
 import About from '../components/settings/about.vue';
 import Funding from '../components/settings/funding.vue';
-import { Setting, Operation, Monitor, InfoFilled, MilkTea } from '@element-plus/icons-vue'
+import History from '../components/settings/history.vue';
+import { Setting, Operation, Monitor, InfoFilled, MilkTea, Document } from '@element-plus/icons-vue'
 
 const { t } = useI18n();
 const currentWindow = getCurrentWindow();
@@ -35,6 +36,7 @@ const getPageTitle = () => {
     case 'Model': return t('settings.model.title');
     case 'About': return t('settings.about.title');
     case 'Funding': return t('settings.funding.title');
+    case 'History': return t('settings.history.title');
     default: return t('settings.title');
   }
 };
@@ -45,7 +47,8 @@ const componentMap = {
   Shortcut,
   Model,
   About,
-  Funding
+  Funding,
+  History
 };
 </script>
 
@@ -69,6 +72,10 @@ const componentMap = {
               <el-icon><Monitor /></el-icon>
               <span>{{ t('settings.model.title') }}</span>
             </el-menu-item>
+            <el-menu-item index="6" @click="switchComponent('History', '6')" class="menu-item">
+              <el-icon><Document /></el-icon>
+              <span>{{ t('settings.history.title') }}</span>
+            </el-menu-item>
             <div class="py-4 px-4 font-medium text-gray-400 text-sm">{{ t('settings.about.title') }}</div>
             <el-menu-item index="4" @click="switchComponent('About', '4')" class="menu-item">
               <el-icon><InfoFilled /></el-icon>
@@ -82,7 +89,7 @@ const componentMap = {
         </el-aside> 
         <el-main class="bg-gray-50 p-8 scrollable-main">
           <h2 class="text-xl font-medium mb-6">{{ getPageTitle() }}</h2>
-          <div class="bg-white rounded-lg p-6 pl-12 shadow-sm">
+          <div class="bg-white rounded-lg p-3 pl-1 shadow-sm h-5/6">
             <component :is="componentMap[currentComponent]" />
           </div>
         </el-main>

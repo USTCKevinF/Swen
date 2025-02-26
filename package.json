@@ -17,6 +17,7 @@
     "@tauri-apps/plugin-http": "^2.3.0",
     "@tauri-apps/plugin-log": "^2.2.0",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-sql": "^2.2.0",
     "@tauri-apps/plugin-store": "^2.2.0",
     "babel-runtime": "^6.26.0",
     "element-plus": "^2.9.3",

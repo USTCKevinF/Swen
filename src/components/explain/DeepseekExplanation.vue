@@ -1,91 +1,190 @@
 <template>
-  <div class="option-item">
-    <div class="option-header" @click="getDeepseekExplanation">
-      <span>DeepSeek 解释</span>
-      <div class="header-actions">
-        <span class="loading-icon" v-if="isLoading">
-          <span class="spinner"></span>
-        </span>
-        <el-icon v-else class="arrow"><ArrowRight /></el-icon>
+  <div class="option-item flex flex-col h-full">
+    <!-- 聊天历史区域 -->
+    <div class="flex-1 overflow-y-auto">
+      <div class="flex flex-col gap-2">
+        <!-- 对话历史 -->
+        <template v-for="(item, index) in chatHistory" :key="index">
+          <!-- 用户问题 -->
+          <div class="text-[13px] pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden">
+            <div class="overflow-hidden text-ellipsis whitespace-nowrap">
+              {{"Q: " + item.question }}
+            </div>
+          </div>
+          <!-- AI回答 -->
+          <div v-if="item.answer" class="flex flex-col selectable-text bg-gray-100 p-3 rounded-lg mb-4">
+            <MdPreview 
+              :modelValue="item.answer"
+              :preview-theme="'default'"
+              class="custom-md-preview"
+            />
+            <div class="flex justify-start mt-1 hover:cursor-pointer">
+              <el-tooltip
+                :content="t('explain.copyAnswer')"
+                placement="top"
+                effect="light"
+              >
+                <el-button 
+                  type="info" 
+                  size="small" 
+                  link
+                  @click="copyAnswer(item.answer)"
+                >
+                  <img src="../../assets/svg/copydocument.svg" class="w-4 h-4 " />
+                </el-button>
+              </el-tooltip>
+            </div>
+          </div>
+        </template>
+
+        <!-- 当前回答（如果正在加载） -->
+        <div v-if="isLoading" class="flex flex-col selectable-text bg-gray-100 p-3 rounded-lg mb-4">
+          <MdPreview 
+            :modelValue="deepseekResponse"
+            :preview-theme="'default'"
+            class="custom-md-preview"
+          />
+        </div>
       </div>
     </div>
-    <div v-if="deepseekResponse" class="flex flex-col gap-2.5">
-      <MdPreview 
-        :modelValue="deepseekResponse"
-        :preview-theme="'default'"
-        class="custom-md-preview"
+
+    <!-- 输入框区域 - 固定在底部 -->
+    <div class="flex gap-2 sticky bottom-0 py-1">
+      <el-input
+        v-model="newQuestion"
+        :placeholder="isLoading ? t('explain.answering') : t('explain.continueAsking')"
+        :disabled="isLoading"
+        @keyup.enter="handleSendQuestion"
       />
-      <div v-if="!isLoading" class="relative flex items-center gap-2.5 pl-3.5 pb-2.5">
-        <div class="relative inline-block">
-          <el-icon 
-            @click="copyToClipboard"
-            class="w-5 h-5 cursor-pointer opacity-90 hover:opacity-100"
-          ><DocumentCopy /></el-icon>
-          <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">复制</span>
-        </div>
-        <div class="relative inline-block">
-          <el-icon 
-            @click="handleRedo"
-            class="w-5 h-5 cursor-pointer opacity-90 hover:opacity-100"
-          ><RefreshRight /></el-icon>
-          <span class="absolute bottom-full left-1/2 -translate-x-1/2 bg-[rgba(22,22,22,0.7)] text-white px-2 py-1 rounded text-[10px] whitespace-nowrap opacity-0 invisible transition-opacity duration-200 group-hover:opacity-100 group-hover:visible">重新生成</span>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+// @ts-ignore 忽略Vue导入错误
+import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
-import { ArrowRight, DocumentCopy, RefreshRight } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core';
+import { saveChatHistory } from '../../utils/database';
+import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
-  inputText: string
+  messages: Array<{role: string, content: string}>
 }>();
 
+const emit = defineEmits(['update:messages']);
+
+interface ChatMessage {
+  question: string;
+  answer: string;
+}
+
+const chatHistory = ref<ChatMessage[]>([]);
+const newQuestion = ref("");
 const deepseekResponse = ref("");
 const isLoading = ref(false);
+const localMessages = ref<Array<{role: string, content: string}>>([]);
 
+// 修改 watch 逻辑，使用正确的滚动容器
+watch(deepseekResponse, () => {
+  nextTick(() => {
+    // 修改选择器，直接选择组件内的滚动容器
+    const scrollContainer = document.querySelector('.option-item > .flex-1');
+    if (scrollContainer) {
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    }
+  });
+});
+
+// 监听初始messages变化
+watch(() => props.messages, (newMessages: Array<{role: string, content: string}>) => {
+  if (newMessages && newMessages.length > 0) {
+    if (localMessages.value.length < newMessages.length) {
+      localMessages.value = [...newMessages];
+      const userMessage = newMessages.find((msg: {role: string, content: string}) => msg.role === "user");
+      if (userMessage && chatHistory.value.length === 0) {
+        getDeepseekExplanation(userMessage.content);
+      }
+    }
+  }
+}, { immediate: true, deep: true });
+
+// 当前流事件监听取消函数
+let fetchStreamUnlisten: (() => void) | null = null;
 
 const { property: baseURL } = useConfig('llm.baseURL', '')
 const { property: apiKey } = useConfig('llm.apiKey', '')
 const { property: model } = useConfig('llm.model', '')
+const { property: maxContextLength } = useConfig('llm.maxContextLength', 6)
 
-async function getDeepseekExplanation() {
-  if (!props.inputText.trim()) return;
+async function handleSendQuestion() {
+  if (!newQuestion.value.trim() || isLoading.value) return;
+  
+  const question = newQuestion.value.trim();
+  newQuestion.value = "";
+  
+  // 添加用户消息到messages
+  localMessages.value.push({ role: "user", content: question });
+  
+  // 调用API获取回答
+  await getDeepseekExplanation(question);
+}
+
+async function getDeepseekExplanation(payload: string) {
+  if (fetchStreamUnlisten) {
+    fetchStreamUnlisten();
+    fetchStreamUnlisten = null;
+  }
   
   isLoading.value = true;
   deepseekResponse.value = "";
-  let systemPrompt = "你是一个包罗万象的知识专家，擅长于给用户解释其提出的概念，用户是一名好学且好奇的学生，会提供一些名词或者概念给你。规则：- 你需要详细地解答，并且以易懂的方式叙述你的观点 - 你的目标是让用户更深入的理解其提供的概念 - 无论用户提供的是什么语言，均用中文进行回复 - 输出完解释之后立刻停止，不要说类似如果你有更多的问题，欢迎继续提问的话.Please use $ instead of \\( and \\) for LaTeX math expressions.";
-
+  
+  // 添加新的问题到历史记录
+  chatHistory.value.push({
+    question: payload,
+    answer: ""
+  });
+  
   try {
-    const unlisten = await listen('fetch-stream-data', (event: any) => {
-      const { message } = event.payload;
-      console.log('Received stream data:', message);
+    const timestampId = Date.now();
+    fetchStreamUnlisten = await listen('fetch-stream-data', (event: any) => {
+      const { message, responseId } = event.payload;  
+      if (!responseId || responseId < timestampId) {
+        return;
+      }
       if (message && typeof message === 'string') {
-        // 按照两个换行符分割多条数据
         const messages = message.split('\n\n');
-        
         messages.forEach(msg => {
-          if (!msg.trim()) return; // 跳过空消息
-          
+          if (!msg.trim()) return;
           try {
-            // 检查是否是结束标记
             if (msg.includes('[DONE]')) {
+              console.log('DONE');
+              isLoading.value = false;
+              
+              // 更新最后一条对话的答案
+              if (chatHistory.value.length > 0) {
+                chatHistory.value[chatHistory.value.length - 1].answer = deepseekResponse.value;
+              }
+              
+              // 添加assistant的回复到messages
+              localMessages.value.push({ role: "assistant", content: deepseekResponse.value });
+              emit('update:messages', localMessages.value);
+              
+              if (fetchStreamUnlisten) {
+                fetchStreamUnlisten();
+                fetchStreamUnlisten = null;
+              }
               return;
             }
-            
-            // 移除 "data: " 前缀
             const jsonStr = msg.replace(/^data: /, '');
             const data = JSON.parse(jsonStr);
-            
-            // 获取实际的内容
+
             const content = data.choices[0]?.delta?.content;
             if (content) {
               deepseekResponse.value += content;
@@ -96,53 +195,113 @@ async function getDeepseekExplanation() {
         });
       }
     });
+    let contextMessages = [];
+    
+    if (localMessages.value.length > maxContextLength.value * 2 + 1) {
+      contextMessages.push(localMessages.value[0]);
 
-    // 调用后端
+      // 根据maxContextLength截取消息
+      const startIdx = localMessages.value.length - (maxContextLength.value * 2 + 1);
+      const messages = localMessages.value.slice(startIdx, startIdx + maxContextLength.value * 2 + 1);
+      contextMessages.push(...messages);
+    }
+    else{
+      contextMessages = localMessages.value;
+    }
+
+    console.log('contextMessages:', contextMessages, localMessages.value)
     await invoke('receive_stream', {
       url: `${baseURL.value}/chat/completions`,
-      cookie: `Bearer ${apiKey.value}`,
+      authToken: `Bearer ${apiKey.value}`,
       prompt: JSON.stringify({
         model: model.value,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: props.inputText }
-        ],
+        messages: contextMessages,
         stream: true
-      })
+      }),
     });
-
-    unlisten();
   } catch (error) {
     console.error('流处理错误:', error);
     deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
-  } finally {
     isLoading.value = false;
+    if (fetchStreamUnlisten) {
+      fetchStreamUnlisten();
+      fetchStreamUnlisten = null;
+    }
+  } finally {
+    if (fetchStreamUnlisten) {
+      fetchStreamUnlisten();
+      fetchStreamUnlisten = null;
+    }
   }
 }
 
-async function copyToClipboard() {
+// 添加清空状态的方法
+const clearState = () => {
+  chatHistory.value = [];
+  newQuestion.value = "";
+  deepseekResponse.value = "";
+  isLoading.value = false;
+  localMessages.value = [];
+};
+
+const saveMultiChatHistory = () => {
+  const initialQuestion = localMessages.value[1].content; // 第一个用户问题
+  const now = new Date();
+    // 构建完整的对话历史
+  let fullResponse = '';
+  for (let i = 1; i < localMessages.value.length; i++) {
+    const msg = localMessages.value[i];
+    if (msg.role === 'user') {
+      fullResponse += 'Q: ' + msg.content + '\n\n';
+    } else if (msg.role === 'assistant') {
+      fullResponse += 'A: ' + msg.content + '\n\n';
+    }
+  }
+  saveChatHistory({
+    content: initialQuestion,
+    response: fullResponse.trim(),
+    model: model.value,
+    timestamp: now.toISOString()
+  });
+}
+
+const copyAnswer = async (text: string) => {
   try {
-    await navigator.clipboard.writeText(deepseekResponse.value);
-    ElMessage({
-      message: '复制成功',
-      type: 'success',
-    });
+    await navigator.clipboard.writeText(text);
+    ElMessage.success(t('explain.copySuccess'));
   } catch (err) {
     console.error('复制失败:', err);
-    ElMessage({
-      message: '复制失败',
-      type: 'error',
-    });
+    ElMessage.error(t('explain.copyFailed'));
   }
-}
+};
 
-function handleRedo() {
-  getDeepseekExplanation();
-}
+// 暴露方法给父组件
+defineExpose({
+  clearState,
+  saveMultiChatHistory
+});
+
+onUnmounted(() => {
+  if (fetchStreamUnlisten) {
+    fetchStreamUnlisten();
+  }
+});
 </script>
 
 <style scoped>
-.copy-button {
-  display: none;
+.selectable-text {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+.el-input {
+  flex: 1;
+}
+
+.option-item {
+  height: 100%;
+  position: relative;
 }
 </style> 

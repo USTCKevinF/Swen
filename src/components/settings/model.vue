@@ -27,6 +27,15 @@
                 />
             </el-form-item>
 
+            <el-form-item :label="t('settings.model.maxContextLength')">
+                <el-input-number
+                    v-model="maxContextLength"
+                    :min="1"
+                    :max="16"
+                    class="w-30"
+                />
+            </el-form-item>
+
             <el-form-item>
                 <div class="flex gap-2 justify-end w-full">
                     <el-button 
@@ -81,6 +90,7 @@ const { t } = useI18n()
 const { property: baseURL, setProperty: setBaseURL, isLoaded: isBaseURLLoaded } = useConfig('llm.baseURL', '')
 const { property: apiKey, setProperty: setApiKey, isLoaded: isApiKeyLoaded } = useConfig('llm.apiKey', '')
 const { property: model, setProperty: setModel, isLoaded: isModelLoaded } = useConfig('llm.model', '')
+const { property: maxContextLength, setProperty: setMaxContextLength, isLoaded: isMaxContextLengthLoaded } = useConfig('llm.maxContextLength', 6)
 
 // 新增测试相关状态
 const testInput = ref(t('settings.model.testInput'))
@@ -91,6 +101,7 @@ const isTesting = ref(false)
 const originalBaseURL = ref('')
 const originalApiKey = ref('')
 const originalModel = ref('')
+const originalMaxContextLength = ref(0)
 
 onMounted(async () => {
   // 等待配置加载完成
@@ -98,7 +109,8 @@ onMounted(async () => {
     const check = () => {
       if (baseURL.value !== undefined && 
           apiKey.value !== undefined && 
-          model.value !== undefined) {
+          model.value !== undefined &&
+          maxContextLength.value !== undefined) {
         resolve(true)
       } else {
         setTimeout(check, 50)
@@ -110,13 +122,15 @@ onMounted(async () => {
   originalBaseURL.value = baseURL.value
   originalApiKey.value = apiKey.value
   originalModel.value = model.value
+  originalMaxContextLength.value = maxContextLength.value
 })
 
 // 添加计算属性检查设置是否有变动
 const hasChanges = computed(() => {
     return baseURL.value !== originalBaseURL.value ||
            apiKey.value !== originalApiKey.value ||
-           model.value !== originalModel.value
+           model.value !== originalModel.value ||
+           maxContextLength.value !== originalMaxContextLength.value
 })
 
 const testConnection = async () => {
@@ -165,10 +179,12 @@ const saveSettings = () => {
     setBaseURL(baseURL.value)
     setApiKey(apiKey.value)
     setModel(model.value)
+    setMaxContextLength(maxContextLength.value)
     
     originalBaseURL.value = baseURL.value
     originalApiKey.value = apiKey.value
     originalModel.value = model.value
+    originalMaxContextLength.value = maxContextLength.value
     
     ElMessage.success(t('settings.model.saveSuccess'))
 }
@@ -177,13 +193,15 @@ const resetSettings = () => {
     baseURL.value = originalBaseURL.value
     apiKey.value = originalApiKey.value
     model.value = originalModel.value
+    maxContextLength.value = originalMaxContextLength.value
     ElMessage.info(t('settings.model.cancelChanges'))
 }
 
 const allConfigLoaded = computed(() => 
   isBaseURLLoaded.value && 
   isApiKeyLoaded.value && 
-  isModelLoaded.value
+  isModelLoaded.value &&
+  isMaxContextLengthLoaded.value
 )
 
 watch(allConfigLoaded, (loaded: boolean) => {
@@ -191,6 +209,7 @@ watch(allConfigLoaded, (loaded: boolean) => {
     originalBaseURL.value = baseURL.value
     originalApiKey.value = apiKey.value
     originalModel.value = model.value
+    originalMaxContextLength.value = maxContextLength.value
   }
 })
 </script>
@@ -213,7 +232,7 @@ watch(allConfigLoaded, (loaded: boolean) => {
 
 .el-form-item :deep(.el-form-item__label) {
     white-space: nowrap;
-    min-width: 140px;
+    min-width: 180px;
 }
 
 .el-form-item :deep(.el-form-item__content) {

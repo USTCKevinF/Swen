@@ -1,12 +1,17 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod config;
 mod hotkey;
+mod llm;
+mod ocr;
+mod screenshot;
 mod tray;
 mod windows;
-mod llm;
+
 use hotkey::init_register_shortcut;
 use log::info;
 use once_cell::sync::OnceCell;
+use windows::config_window;
+use config::is_first_run;
 use std::sync::Mutex;
 use tauri::Manager;
 pub struct StringWrapper(pub Mutex<String>);
@@ -16,6 +21,7 @@ pub static APP: OnceCell<tauri::AppHandle> = OnceCell::new();
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
@@ -43,19 +49,21 @@ pub fn run() {
                 Ok(()) => {}
                 Err(e) => info!("Failed to register global shortcut: {}", e),
             }
-            // let config_path = get_config_path(app);
             // Check First Run
-            // if is_first_run() {
-            //     // Open Config Window
-            //     info!("First Run, opening config window");
-            //     config_window();
-            // }
+            if is_first_run() {
+                // Open Config Window
+                info!("First Run, opening config window");
+                config_window();
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             config::reload_store,
             hotkey::register_shortcut_by_frontend,
             llm::receive_stream,
+            screenshot::screenshot,
+            screenshot::cut_image,
+            ocr::system_ocr,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

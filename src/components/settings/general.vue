@@ -36,9 +36,9 @@
                     <el-switch v-model="rememberSize" />
                 </el-form-item>
 
-                <el-form-item :label="t('settings.general.alwaysOnTop')">
+                <!-- <el-form-item :label="t('settings.general.alwaysOnTop')">
                     <el-switch v-model="alwaysOnTop" />
-                </el-form-item>
+                </el-form-item> -->
             </template>
         </el-form>
     </div>
@@ -121,7 +121,7 @@ watch(alwaysOnTop, (newValue: boolean) => {
 /* 添加以下样式以确保标签不会换行 */
 .el-form-item :deep(.el-form-item__label) {
     white-space: nowrap;
-    min-width: 140px;
+    min-width: 180px;
 }
 
 /* 确保内容区域有足够的空间 */

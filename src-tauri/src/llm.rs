@@ -1,31 +1,33 @@
+use crate::APP;
 use futures_util::StreamExt;
-use tauri_plugin_http::reqwest::{header, Client};
-use std::str::from_utf8;
-use tauri::{AppHandle, Runtime, Emitter};
 use serde_json;
-
+use std::str::from_utf8;
+use tauri::Emitter;
+use tauri_plugin_http::reqwest::{header, Client};
 #[derive(Clone, serde::Serialize)]
 pub struct StreamPayload {
     pub message: String,
-    pub prompt: String,
+    #[serde(rename = "responseId")]
+    pub response_id: u128,
 }
 
 #[tauri::command]
-pub async fn receive_stream<R: Runtime>(
-    app_handle: AppHandle<R>,
-    url: &str,
-    cookie: &str,
-    prompt: &str,
-) -> Result<String, String> {
+pub async fn receive_stream(url: &str, auth_token: &str, prompt: &str) -> Result<String, String> {
+    let app_handle = APP.get().unwrap();
     // 解析传入的 JSON 字符串
-    let prompt_data: serde_json::Value = serde_json::from_str(prompt)
-        .map_err(|e| format!("Failed to parse prompt JSON: {}", e))?;
+    let prompt_data: serde_json::Value =
+        serde_json::from_str(prompt).map_err(|e| format!("Failed to parse prompt JSON: {}", e))?;
+
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
 
     let mut headers = header::HeaderMap::new();
     headers.insert(
         header::AUTHORIZATION,
-        header::HeaderValue::from_str(cookie)
-            .map_err(|e| format!("Invalid header value: {}", e))?
+        header::HeaderValue::from_str(auth_token)
+            .map_err(|e| format!("Invalid authorization token: {}", e))?,
     );
 
     let client = Client::builder()
@@ -35,7 +37,7 @@ pub async fn receive_stream<R: Runtime>(
 
     let response = client
         .post(url)
-        .json(&prompt_data)  // 直接使用解析后的 JSON 数据
+        .json(&prompt_data) // 直接使用解析后的 JSON 数据
         .send()
         .await
         .map_err(|err| format!("failed to call API: {}", err))?;
@@ -50,13 +52,13 @@ pub async fn receive_stream<R: Runtime>(
         match item {
             Ok(bytes) => {
                 let chunk = from_utf8(&bytes).unwrap();
-                // println!("{}", chunk);
                 app_handle
-                    .emit(
+                    .emit_to(
+                        "home",
                         "fetch-stream-data",
                         StreamPayload {
                             message: chunk.to_string(),
-                            prompt: prompt.to_string(),
+                            response_id: timestamp,
                         },
                     )
                     .unwrap();

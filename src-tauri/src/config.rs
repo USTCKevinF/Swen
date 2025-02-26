@@ -48,3 +48,27 @@ pub fn set<T: serde::ser::Serialize>(key: &str, value: T) {
     store.set(key.to_string(), json!(value));
     store.save().unwrap();
 }
+
+pub fn is_first_run() -> bool {
+    let state = APP.get().unwrap().state::<StoreWrapper>();
+    let store = state.0.lock().unwrap();
+    println!("store: {:?}", store.is_empty());
+    if store.is_empty() {
+        true
+    } else {
+        let api_key = store.get("llm.apiKey").unwrap();
+        let base_url = store.get("llm.baseURL").unwrap();
+        let model = store.get("llm.model").unwrap();
+        println!("api_key: {:?}", api_key);
+        println!("base_url: {:?}", base_url);
+        println!("model: {:?}", model);
+        if api_key.is_null() || base_url.is_null() || model.is_null() || api_key == ""
+            || base_url == ""
+            || model == ""
+        {
+            true
+        } else {
+            false
+        }
+    }
+}

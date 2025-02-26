@@ -1,26 +1,43 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { onMounted, onUnmounted } from 'vue';
+import { ElMessage } from 'element-plus';
 import { listen } from '@tauri-apps/api/event';
-import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { COMPREHENSIVE_EXPLANATION_PROMPT } from '../utils/prompts';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
+
+const isFavorite = ref(false);
 
 const inputText = ref("");
+const messages = ref<Array<{role: string, content: string}>>([]);
+const currentRequestId = ref(0);
 const currentWindow = getCurrentWindow();
 let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 let unlisten: any = null;
 let unlistenInput: any = null;
 let isWindowFullyShown = false;
+const isPinned = ref(false);
+
+// 添加ref用于获取DeepseekExplanation组件实例
+const deepseekExplanationRef = ref();
 
 // 监听失去焦点事件
 const listenBlur = async () => {
   unlisten = await listen('tauri://blur', () => {
     if (currentWindow.label === 'home') {
-      // 增加一个标志位，避免窗口刚显示就关闭
-      if (isWindowFullyShown) {  
+      if (isWindowFullyShown && !isPinned.value) {
         if (blurTimeout) {
           clearTimeout(blurTimeout);
         }
+        // 保存多轮对话历史
+        deepseekExplanationRef.value?.saveMultiChatHistory();
+        // 清空组件状态
+        deepseekExplanationRef.value?.clearState();
+        // 清空输入文本和消息
+        inputText.value = "";
+        messages.value = [];
+        
         blurTimeout = setTimeout(async () => {
           await currentWindow.hide();
         }, 100);
@@ -29,18 +46,40 @@ const listenBlur = async () => {
   });
 };
 
+// 处理收藏点击事件
+const handleFavoriteClick = () => {
+  isFavorite.value = !isFavorite.value;
+  // TODO: 在此处添加实际的收藏/取消收藏逻辑
+  ElMessage({
+    message: isFavorite.value ? '收藏成功' : '已取消收藏',
+    type: isFavorite.value ? 'success' : 'info',
+    duration: 2000
+  });
+};
+
 // 监听后端发送的文本更新事件
 const listenInputUpdate = async () => {
   unlistenInput = await listen('update-input', (event: any) => {
-    inputText.value = event.payload as string;
+    // 清空组件状态
+    deepseekExplanationRef.value?.clearState();
+    const { payload, requestId } = event.payload;
+    // 只处理最新的请求
+    if (requestId && requestId > currentRequestId.value) {
+      currentRequestId.value = requestId;
+      inputText.value = payload.trim();
+      // 更新messages列表
+      messages.value = [
+        { role: "system", content: COMPREHENSIVE_EXPLANATION_PROMPT },
+        { role: "user", content: payload.trim() }
+      ];
+    }
   });
 };
 
 onMounted(async () => {
   try {
-    currentWindow.show();
-    await listenBlur();
     await listenInputUpdate();
+    await listenBlur();
     
     // 监听获得焦点事件，取消关闭计时
     await listen('tauri://focus', () => {
@@ -48,15 +87,23 @@ onMounted(async () => {
         clearTimeout(blurTimeout);
       }
     });
-
+    
     // 监听移动事件，取消关闭计时
     await listen('tauri://move', () => {
       if (blurTimeout) {
         clearTimeout(blurTimeout);
       }
     });
-
+    
     isWindowFullyShown = true;
+    
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // 添加初始化完成事件
+    const appWindow = await getCurrentWebviewWindow();
+    await appWindow.emit("home-ready");
+    console.log('home-ready');
+    
   } catch (err) {
     console.error(err)
   }
@@ -71,21 +118,39 @@ onUnmounted(() => {
     unlistenInput();
   }
 });
+
+// 处理pin点击事件
+const handlePinClick = () => {
+  isPinned.value = !isPinned.value;
+};
 </script>
 
 <template>
-  <div class="h-full rounded-lg backdrop-blur-sm relative">
+  <div class="h-full rounded-lg backdrop-blur-sm relative bg-[#f9f9f9]">
     <el-container class="h-full">
-      <el-header class="h-8 bg-white fixed top-0 left-0 right-0 z-10" data-tauri-drag-region='true'></el-header>
+      <el-header class="h-10 fixed top-0 left-0 right-0 z-10 flex items-center justify-end px-2" data-tauri-drag-region='true'>
+        <div class="flex items-center gap-2">
+          <div class="cursor-pointer" @click="handleFavoriteClick">
+            <!-- <el-icon :class="[{ 'text-yellow-400': isFavorite }, 'star-icon']" :size="25">
+              <StarFilled/>
+            </el-icon> -->
+          </div>
+          <div class="cursor-pointer" @click="handlePinClick">
+            <img 
+              src= '../assets/svg/pin.svg'
+              class="w-6 h-6 opacity-30 hover:opacity-60 transition-opacity duration-200"
+              :alt="isPinned ? 'Pinned' : 'Not Pinned'"
+              :title="isPinned ? '取消钉住窗口' : '钉住窗口'"
+              :class="{ 'pin-active': isPinned }"
+            />
+          </div>
+        </div>
+      </el-header>
       <el-main class="p-3 mt-8 overflow-y-auto">
-        <el-input
-            v-model="inputText"
-            class="w-full text-sm outline-none mb-2"
-            resize="none"
-            :rows="4"
-            type="textarea"
+        <DeepseekExplanation 
+          ref="deepseekExplanationRef"
+          :messages="messages"
         />
-        <DeepseekExplanation :inputText="inputText" />
       </el-main>
     </el-container>
   </div>
@@ -97,6 +162,19 @@ onUnmounted(() => {
   background: transparent;
   height: 100vh;
   overflow: hidden;
+}
+
+.el-icon {
+  opacity: 0.4;
+  transition: all 0.15s ease;
+}
+
+.el-icon:hover {
+  opacity: 0.6;
+}
+
+.text-yellow-400 {
+  opacity: 0.8;
 }
 
 .md-editor-preview-wrapper {
@@ -132,7 +210,7 @@ onUnmounted(() => {
 }
 
 .custom-md-preview {
-  @apply w-full text-xs bg-gray-50;
+  @apply w-full text-xs bg-gray-100;
 }
 
 .katex-error {
@@ -156,4 +234,43 @@ onUnmounted(() => {
          hover:bg-gray-100 hover:border-gray-400 active:bg-gray-200 active:translate-y-px
          flex items-center justify-center min-w-[80px] h-7 transition-all duration-200;
 }
+
+.el-header {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.pin-active {
+  filter: invert(40%) sepia(60%) saturate(1000%) hue-rotate(190deg) brightness(100%) contrast(100%);
+  transform: rotate(45deg);
+  opacity: 0.8;
+}
+
+.star-icon {
+  opacity: 0.2;
+  transition: all 0.15s ease;
+}
+
+.star-icon.text-yellow-400 {
+  opacity: 0.8;
+  color: #facc15;
+}
+
+/* 添加以下样式来禁止选中 */
+.h-full {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 允许输入框内的文本可以选中 */
+.el-input textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
 </style>
