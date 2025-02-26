@@ -151,23 +151,6 @@ async function getDeepseekExplanation(payload: string) {
               localMessages.value.push({ role: "assistant", content: deepseekResponse.value });
               emit('update:messages', localMessages.value);
               
-              // 保存到数据库
-              if (deepseekResponse.value) {
-                const now = new Date();
-                const localTimestamp = now.toISOString();
-                
-                saveChatHistory({
-                  content: payload,
-                  response: deepseekResponse.value,
-                  model: model.value || 'DeepSeek',
-                  timestamp: localTimestamp
-                }).then(success => {
-                  if (success) {
-                    console.log('聊天记录已保存到数据库');
-                  }
-                });
-              }
-              
               if (fetchStreamUnlisten) {
                 fetchStreamUnlisten();
                 fetchStreamUnlisten = null;
@@ -222,9 +205,31 @@ const clearState = () => {
   localMessages.value = [];
 };
 
+const saveMultiChatHistory = () => {
+  const initialQuestion = localMessages.value[1].content; // 第一个用户问题
+  const now = new Date();
+    // 构建完整的对话历史
+  let fullResponse = '';
+  for (let i = 1; i < localMessages.value.length; i++) {
+    const msg = localMessages.value[i];
+    if (msg.role === 'user') {
+      fullResponse += 'Q: ' + msg.content + '\n\n';
+    } else if (msg.role === 'assistant') {
+      fullResponse += 'A: ' + msg.content + '\n\n';
+    }
+  }
+  saveChatHistory({
+    content: initialQuestion,
+    response: fullResponse.trim(),
+    model: model.value,
+    timestamp: now.toISOString()
+  });
+}
+
 // 暴露方法给父组件
 defineExpose({
-  clearState
+  clearState,
+  saveMultiChatHistory
 });
 
 onUnmounted(() => {

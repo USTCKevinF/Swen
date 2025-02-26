@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { listen } from '@tauri-apps/api/event';
 import { ElMessage } from 'element-plus';
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { listen } from '@tauri-apps/api/event';
 import { ref, onMounted, onUnmounted } from 'vue';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { COMPREHENSIVE_EXPLANATION_PROMPT } from '../utils/prompts';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
 
 const isFavorite = ref(false);
@@ -30,6 +30,8 @@ const listenBlur = async () => {
         if (blurTimeout) {
           clearTimeout(blurTimeout);
         }
+        // 保存多轮对话历史
+        deepseekExplanationRef.value?.saveMultiChatHistory();
         // 清空组件状态
         deepseekExplanationRef.value?.clearState();
         // 清空输入文本和消息
@@ -58,6 +60,8 @@ const handleFavoriteClick = () => {
 // 监听后端发送的文本更新事件
 const listenInputUpdate = async () => {
   unlistenInput = await listen('update-input', (event: any) => {
+    // 清空组件状态
+    deepseekExplanationRef.value?.clearState();
     const { payload, requestId } = event.payload;
     // 只处理最新的请求
     if (requestId && requestId > currentRequestId.value) {
