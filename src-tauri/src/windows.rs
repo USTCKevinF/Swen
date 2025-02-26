@@ -223,6 +223,7 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
                                     )
                                     .unwrap();
                             });
+                            window.show().unwrap();
                         }
                     }
                 }

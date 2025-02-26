@@ -10,6 +10,8 @@ mod windows;
 use hotkey::init_register_shortcut;
 use log::info;
 use once_cell::sync::OnceCell;
+use windows::config_window;
+use config::is_first_run;
 use std::sync::Mutex;
 use tauri::Manager;
 pub struct StringWrapper(pub Mutex<String>);
@@ -47,13 +49,12 @@ pub fn run() {
                 Ok(()) => {}
                 Err(e) => info!("Failed to register global shortcut: {}", e),
             }
-            // let config_path = get_config_path(app);
             // Check First Run
-            // if is_first_run() {
-            //     // Open Config Window
-            //     info!("First Run, opening config window");
-            //     config_window();
-            // }
+            if is_first_run() {
+                // Open Config Window
+                info!("First Run, opening config window");
+                config_window();
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

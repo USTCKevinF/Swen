@@ -48,3 +48,9 @@ pub fn set<T: serde::ser::Serialize>(key: &str, value: T) {
     store.set(key.to_string(), json!(value));
     store.save().unwrap();
 }
+
+pub fn is_first_run() -> bool {
+    let state = APP.get().unwrap().state::<StoreWrapper>();
+    let store = state.0.lock().unwrap();
+    store.is_empty()
+}
