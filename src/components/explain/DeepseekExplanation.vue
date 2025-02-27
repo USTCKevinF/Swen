@@ -54,7 +54,7 @@
         v-model="newQuestion"
         :placeholder="isLoading ? t('explain.answering') : t('explain.continueAsking')"
         :disabled="isLoading"
-        @keyup.enter="handleSendQuestion"
+        @keydown.enter="handleKeyDown"
       />
     </div>
   </div>
@@ -122,6 +122,16 @@ const { property: baseURL } = useConfig('llm.baseURL', '')
 const { property: apiKey } = useConfig('llm.apiKey', '')
 const { property: model } = useConfig('llm.model', '')
 const { property: maxContextLength } = useConfig('llm.maxContextLength', 6)
+
+function handleKeyDown(event: KeyboardEvent) {
+  // 检查是否处于输入法组合状态
+  if (event.isComposing || event.keyCode === 229) {
+    // 如果是输入法组合状态，不处理这个回车键
+    return;
+  }
+  // 不是输入法组合状态，可以安全发送消息
+  handleSendQuestion();
+}
 
 async function handleSendQuestion() {
   if (!newQuestion.value.trim() || isLoading.value) return;
