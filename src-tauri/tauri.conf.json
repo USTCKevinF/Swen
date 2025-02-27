@@ -63,7 +63,9 @@
             "http:allow-fetch",
             "http:default",
             "sql:default",
-            "sql:allow-execute"
+            "sql:allow-execute",
+            "opener:allow-open-url",
+            "opener:default"
           ]
         }
       ]
