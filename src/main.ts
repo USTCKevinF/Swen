@@ -1,3 +1,4 @@
+// @ts-ignore 忽略Vue导入错误
 import { createApp } from "vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";

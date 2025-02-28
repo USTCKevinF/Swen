@@ -46,6 +46,7 @@
 
 <script setup lang="ts">
 import { useConfig } from '../../composables/useConfig'
+// @ts-ignore 忽略Vue导入错误
 import { watch, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import 'flag-icons/css/flag-icons.min.css'

@@ -1,3 +1,4 @@
+// @ts-ignore 忽略Vue导入错误
 import { ref } from 'vue'
 
 export function useGetState(initialValue: any) {

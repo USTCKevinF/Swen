@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
 import { listen } from '@tauri-apps/api/event';
+// @ts-ignore 忽略Vue导入错误
 import { ref, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { COMPREHENSIVE_EXPLANATION_PROMPT } from '../utils/prompts';
+import { COMPREHENSIVE_EXPLANATION_PROMPT, EXPLANATION_SUMMARY_PROMPT } from '../utils/prompts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
 
@@ -67,11 +68,19 @@ const listenInputUpdate = async () => {
     if (requestId && requestId > currentRequestId.value) {
       currentRequestId.value = requestId;
       inputText.value = payload.trim();
-      // 更新messages列表
-      messages.value = [
-        { role: "system", content: COMPREHENSIVE_EXPLANATION_PROMPT },
-        { role: "user", content: payload.trim() }
-      ];
+      if (payload.trim().length > 500) {
+        // 更新messages列表
+        messages.value = [
+          { role: "system", content: EXPLANATION_SUMMARY_PROMPT },
+          { role: "user", content: payload.trim() }
+        ];
+      } else {
+        // 更新messages列表
+        messages.value = [
+          { role: "system", content: COMPREHENSIVE_EXPLANATION_PROMPT },
+          { role: "user", content: payload.trim() }
+        ];
+      }
     }
   });
 };

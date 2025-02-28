@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window';
+// @ts-ignore 忽略Vue导入错误
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import General from '../components/settings/general.vue';

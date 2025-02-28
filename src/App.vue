@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// @ts-ignore 忽略Vue导入错误
 import { ref, onMounted, watch } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';

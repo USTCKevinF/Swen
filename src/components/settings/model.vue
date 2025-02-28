@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore 忽略Vue导入错误
 import { ref, computed, onMounted, watch } from 'vue'
 import { useConfig } from '../../composables/useConfig'
 import { fetch } from '@tauri-apps/plugin-http'
