@@ -61,6 +61,7 @@
                     type="primary" 
                     @click="testConnection"
                     :loading="isTesting"
+                    :disabled="isTesting || !canTest"
                     class="mt-2"
                 >
                     {{ t('settings.model.testButton') }}
@@ -132,6 +133,11 @@ const hasChanges = computed(() => {
            apiKey.value !== originalApiKey.value ||
            model.value !== originalModel.value ||
            maxContextLength.value !== originalMaxContextLength.value
+})
+
+// 添加计算属性检查是否可以进行测试
+const canTest = computed(() => {
+    return !!baseURL.value && !!apiKey.value && !!model.value
 })
 
 const testConnection = async () => {
