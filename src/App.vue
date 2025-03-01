@@ -19,6 +19,7 @@ watch(language, (newValue: string) => {
 })
 
 let appWindow: any
+
 // 路由映射
 const routeMap: Record<string, string> = {
   default: '/',
@@ -29,10 +30,14 @@ const routeMap: Record<string, string> = {
 const currentLabel = ref('')
 // 根据标签更新路由
 const updateRouteByLabel = (label: string) => {
+  console.log("当前窗口标签:", label)
   if (routeMap[label]) {
-    console.log("routeMap[label]是",routeMap[label])
+    console.log("路由映射到:", routeMap[label])
     router.push(routeMap[label])
     currentLabel.value = label
+  } else {
+    console.log("未找到标签对应的路由，使用默认路由")
+    router.push('/')
   }
 }
 
@@ -40,6 +45,7 @@ onMounted(async () => {
   try {
     appWindow = await getCurrentWebviewWindow()
     // 设置初始路由
+    console.log("当前窗口标签:", appWindow.label)
     updateRouteByLabel(appWindow.label)
   } catch (error) {
     console.error('获取当前窗口失败:', error)
