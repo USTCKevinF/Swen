@@ -94,8 +94,8 @@ const keyMap = {
   Suspend: 'Suspend'
 }
 
-const { property: selectionTranslate, setProperty: setSelectionTranslate } = useConfig('hotkey_selection_get', '')
-const { property: ocr, setProperty: setOcr } = useConfig('hotkey_ocr', '')
+const { property: selectionTranslate, setProperty: setSelectionTranslate } = useConfig('hotkey_selection_get', 'Option+E')
+const { property: ocr, setProperty: setOcr } = useConfig('hotkey_ocr', 'Option+W')
 
 const keyDown = (e, setKey) => {
   e.preventDefault()
@@ -149,6 +149,7 @@ const handleFocus = async (currentKey, setKey) => {
 
 const registerHandler = async (name, key) => {
   try {
+    console.log('registerHandler', name, key)
     const registered = await isRegistered(key)
     if (registered) {
       ElMessage.error('该快捷键已被注册')
