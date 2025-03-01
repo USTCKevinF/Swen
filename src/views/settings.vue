@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window';
 // @ts-ignore 忽略Vue导入错误
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import General from '../components/settings/general.vue';
 import Shortcut from '../components/settings/shortcut.vue';
@@ -10,12 +10,23 @@ import About from '../components/settings/about.vue';
 import Funding from '../components/settings/funding.vue';
 import History from '../components/settings/history.vue';
 import { Setting, Operation, Monitor, InfoFilled, MilkTea, Document } from '@element-plus/icons-vue'
+import { useConfig } from '../composables/useConfig';
 
 const { t } = useI18n();
 const currentWindow = getCurrentWindow();
 
 const currentComponent = ref('General');
 const activeIndex = ref('1');
+
+// 获取模型配置状态
+const { property: baseURL } = useConfig('llm.baseURL', '');
+const { property: apiKey } = useConfig('llm.apiKey', '');
+const { property: model } = useConfig('llm.model', '');
+
+// 检查模型是否已配置
+const isModelConfigured = computed(() => {
+  return baseURL.value && apiKey.value && model.value;
+});
 
 const switchComponent = (componentName: string, index: string) => {
   currentComponent.value = componentName;
@@ -72,6 +83,9 @@ const componentMap = {
             <el-menu-item index="3" @click="switchComponent('Model', '3')" class="menu-item">
               <el-icon><Monitor /></el-icon>
               <span>{{ t('settings.model.title') }}</span>
+              <el-tag v-if="!isModelConfigured" size="small" type="danger" class="ml-2">
+                {{ t('settings.model.notConfigured')  }}
+              </el-tag>
             </el-menu-item>
             <el-menu-item index="6" @click="switchComponent('History', '6')" class="menu-item">
               <el-icon><Document /></el-icon>
