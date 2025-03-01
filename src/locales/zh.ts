@@ -13,16 +13,16 @@ export default {
     },
     shortcut: {
       title: '快捷键设置',
-      selectionShortcut: '选中解释快捷键',
-      screenshotShortcut: '截图解释快捷键',
+      selectionShortcut: '选中唤起窗口快捷键',
+      screenshotShortcut: '截图唤起窗口快捷键',
       save: '保存',
       clickToInput: '点击输入快捷键'
     },
     model: {
       title: '大模型设置',
-      baseURL: 'Base URL',
-      apiKey: 'API 密钥',
-      modelName: '模型名称',
+      baseURL: 'Base URL（必填）',
+      apiKey: 'API 密钥（必填）',
+      modelName: '模型名称（必填）',
       testConnection: '测试模型连通',
       testInput: '你是什么模型？',
       testButton: '测试连接',
@@ -32,7 +32,8 @@ export default {
       cancel: '取消',
       saveSuccess: '设置已保存',
       cancelChanges: '已取消修改',
-      maxContextLength: '最大上下文长度'
+      maxContextLength: '最大上下文长度',
+      notConfigured: '未配置'
     },
     history: {
       title: '历史记录',
