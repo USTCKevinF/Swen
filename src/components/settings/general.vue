@@ -4,7 +4,7 @@
             <el-form-item :label="t('settings.general.displayLanguage')">
                 <el-select v-model="language" :placeholder="t('settings.general.displayLanguage')" >
                     <template #prefix>
-                        <span :class="`fi fi-${LanguageFlag[language]}`"></span>
+                        <img :src="language === 'zh' ? '/logo/cn.svg' : '/logo/gb.svg'" class="language-flag" />
                     </template>
                     <el-option
                         v-for="lang in languages"
@@ -13,7 +13,7 @@
                         :value="lang.value"
                     >
                         <span class="flex items-center gap-2">
-                            <span :class="`fi fi-${LanguageFlag[lang.value]}`"></span>
+                            <img :src="lang.value === 'zh' ? '/logo/cn.svg' : '/logo/gb.svg'" class="language-flag" />
                             {{ lang.label }}
                         </span>
                     </el-option>
@@ -49,8 +49,6 @@ import { useConfig } from '../../composables/useConfig'
 // @ts-ignore 忽略Vue导入错误
 import { watch, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import 'flag-icons/css/flag-icons.min.css'
-import { LanguageFlag } from '../../utils/language'
 
 const { t, locale } = useI18n()
 const { property: language, setProperty: setLanguage } = useConfig('language', 'zh')
@@ -140,5 +138,12 @@ watch(alwaysOnTop, (newValue: boolean) => {
 
 :deep(.el-select-dropdown__item) {
     padding: 0 20px;
+}
+
+/* 添加语言图标样式 */
+.language-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: contain;
 }
 </style>

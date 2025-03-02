@@ -30,7 +30,7 @@
                   link
                   @click="copyAnswer(item.answer)"
                 >
-                  <img src="../../assets/svg/copydocument.svg" class="w-4 h-4 " />
+                  <img src="/logo/copydocument.svg" class="w-4 h-4 " />
                 </el-button>
               </el-tooltip>
             </div>

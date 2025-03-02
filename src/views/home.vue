@@ -20,6 +20,7 @@ let unlistenInput: any = null;
 let isWindowFullyShown = false;
 const isPinned = ref(false);
 
+
 // 添加ref用于获取DeepseekExplanation组件实例
 const deepseekExplanationRef = ref();
 
@@ -146,7 +147,7 @@ const handlePinClick = () => {
           </div>
           <div class="cursor-pointer" @click="handlePinClick">
             <img 
-              src= '../assets/svg/pin.svg'
+              src="/logo/pin.svg"
               class="w-6 h-6 opacity-30 hover:opacity-60 transition-opacity duration-200"
               :alt="isPinned ? 'Pinned' : 'Not Pinned'"
               :title="isPinned ? '取消钉住窗口' : '钉住窗口'"
@@ -168,7 +169,6 @@ const handlePinClick = () => {
 
 <style>
 :global(body) {
-  background: transparent;
   height: 100vh;
   overflow: hidden;
 }
