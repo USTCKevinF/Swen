@@ -76,8 +76,27 @@ pub fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
     match app_handle.get_webview_window(label) {
         Some(v) => {
             info!("Window existence: {}", label);
+            
+            // 确保窗口在所有工作区可见
+            v.set_visible_on_all_workspaces(true).unwrap();
+            
+            // 将窗口移动到当前鼠标所在的显示器位置
+            // v.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(
+            //     position.x,
+            //     position.y,
+            // ))).unwrap();
+            
+            // 确保窗口在当前桌面上显示
+            #[cfg(target_os = "macos")]
+            {
+                // macOS 特定处理：先隐藏再显示可以强制窗口在当前桌面显示
+                v.hide().unwrap();
+                v.show().unwrap();
+            }
+            
+            // 设置窗口焦点
             v.set_focus().unwrap();
-            v.show().unwrap();
+            
             (v, true)
         }
         None => {
