@@ -32,6 +32,8 @@ const listenBlur = async () => {
         if (blurTimeout) {
           clearTimeout(blurTimeout);
         }
+        // 取消流事件监听
+        deepseekExplanationRef.value?.cancelFetchStream();
         // 保存多轮对话历史
         deepseekExplanationRef.value?.saveMultiChatHistory();
         // 清空组件状态
@@ -41,7 +43,9 @@ const listenBlur = async () => {
         messages.value = [];
         
         blurTimeout = setTimeout(async () => {
+          // 隐藏窗口
           await currentWindow.hide();
+          // await currentWindow.setVisibleOnAllWorkspaces(false);
         }, 100);
       }
     }

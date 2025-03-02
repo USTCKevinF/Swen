@@ -92,15 +92,15 @@ const isLoading = ref(false);
 const localMessages = ref<Array<{role: string, content: string}>>([]);
 
 // 修改 watch 逻辑，使用正确的滚动容器
-watch(deepseekResponse, () => {
-  nextTick(() => {
-    // 修改选择器，直接选择组件内的滚动容器
-    const scrollContainer = document.querySelector('.option-item > .flex-1');
-    if (scrollContainer) {
-      scrollContainer.scrollTop = scrollContainer.scrollHeight;
-    }
-  });
-});
+// watch(deepseekResponse, () => {
+//   nextTick(() => {
+//     // 修改选择器，直接选择组件内的滚动容器
+//     const scrollContainer = document.querySelector('.option-item > .flex-1');
+//     if (scrollContainer) {
+//       scrollContainer.scrollTop = scrollContainer.scrollHeight;
+//     }
+//   });
+// });
 
 // 监听初始messages变化
 watch(() => props.messages, (newMessages: Array<{role: string, content: string}>) => {
@@ -254,6 +254,15 @@ const clearState = () => {
   localMessages.value = [];
 };
 
+// 添加取消监听的方法
+const cancelFetchStream = () => {
+  if (fetchStreamUnlisten) {
+    fetchStreamUnlisten();
+    fetchStreamUnlisten = null;
+    isLoading.value = false;
+  }
+};
+
 const saveMultiChatHistory = () => {
   const initialQuestion = localMessages.value[1].content; // 第一个用户问题
   const now = new Date();
@@ -288,7 +297,8 @@ const copyAnswer = async (text: string) => {
 // 暴露方法给父组件
 defineExpose({
   clearState,
-  saveMultiChatHistory
+  saveMultiChatHistory,
+  cancelFetchStream
 });
 
 onUnmounted(() => {
