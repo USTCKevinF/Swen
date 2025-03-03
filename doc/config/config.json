@@ -1,0 +1,39 @@
+{
+    "locale": "en",
+    "navbar": {
+        "title": "Swen使用指南",
+        "logo": {
+            "alt": "Swen Logo",
+            "url": "/static/images/logo.png"
+        },
+        "home_url": "/",
+        "items": [
+            {
+                "url": "/doc1/",
+                "label": "Doc1",
+                "position": "left"
+            }
+        ]
+    },
+    "footer":{
+        "top":[
+            {
+                "label": "",
+                "items": [
+                    {
+                        "label": "",
+                        "url": "#",
+                        "target": "_blank"
+                    }
+                ]
+            }
+        ],
+        "bottom": [
+            {
+                "label": "Copyright © 2025 Wenjun Feng",
+                "url": "https://www.swen-app.com",
+                "target": "_blank"
+            }
+        ]
+    }
+}
