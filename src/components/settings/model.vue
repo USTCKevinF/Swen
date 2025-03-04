@@ -1,6 +1,11 @@
 <template>
     <div>
         <el-form label-width="140px" class="settings-form">
+            <div class="api-tutorial-link">
+                <a href="https://www.swen-app.com/doc/API" target="_blank">
+                    {{ t('settings.model.configTutorial') }}
+                </a>
+            </div>
             <el-form-item :label="t('settings.model.baseURL')">
                 <el-input 
                     v-model="baseURL" 
@@ -250,5 +255,19 @@ watch(allConfigLoaded, (loaded: boolean) => {
 .settings-form :deep(.el-input),
 .settings-form :deep(.el-select) {
     font-size: 14px;
+}
+
+.api-tutorial-link {
+  margin-left: 50px;
+  font-size: 12px;
+}
+
+.api-tutorial-link a {
+  color: var(--el-color-primary);
+  text-decoration: none;
+}
+
+.api-tutorial-link a:hover {
+  text-decoration: underline;
 }
 </style>

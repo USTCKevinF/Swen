@@ -33,7 +33,8 @@ export default {
       saveSuccess: '设置已保存',
       cancelChanges: '已取消修改',
       maxContextLength: '最大上下文长度',
-      notConfigured: '未配置'
+      notConfigured: '未配置',
+      configTutorial: '查看API配置教程'
     },
     history: {
       title: '历史记录',
@@ -51,7 +52,12 @@ export default {
       loadFailed: '加载历史记录失败'
     },
     about: {
-      title: '关于应用'
+      name: '随问',
+      title: '关于应用',
+      website: '官方网站',
+      qqGroup: 'QQ 交流群',
+      privacyPolicy: '隐私政策',
+      termsOfUse: '使用说明'
     },
     funding: {
       title: '赞助奶茶',

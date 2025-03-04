@@ -33,7 +33,8 @@ export default {
       saveSuccess: 'Settings Saved',
       cancelChanges: 'Changes Cancelled',
       maxContextLength: 'Max Context Length',
-      notConfigured: 'Not Configured'
+      notConfigured: 'Not Configured',
+      configTutorial: 'View API Configuration Tutorial'
     },
     history: {
       title: 'History',
@@ -51,7 +52,12 @@ export default {
       loadFailed: 'Failed to load history records'
     },
     about: {
-      title: 'About'
+      name: 'Swen',
+      title: 'About',
+      website: 'Official Website',
+      qqGroup: 'QQ Group',
+      privacyPolicy: 'Privacy Policy',
+      termsOfUse: 'Terms of Use'
     },
     funding: {
       title: 'Buy Me a Coffee',
