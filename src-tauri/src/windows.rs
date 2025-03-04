@@ -354,7 +354,7 @@ pub fn system_screenshot_hotkey(
             .as_millis();
         
             let ocr_result_clone = ocr_result.clone();
-            if ocr_result.is_empty() {
+            if ocr_result=="" {
                 return;
             }
         
