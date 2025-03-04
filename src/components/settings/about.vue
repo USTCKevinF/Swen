@@ -7,46 +7,58 @@
     
     <!-- 应用名称和版本 -->
     <div class="app-info">
-      <h1>Swen {{ version }}</h1>
+      <h1>{{ t('settings.about.name') }} {{ version }}</h1>
     </div>
     
     <!-- 链接区域 -->
     <div class="links-container">
       <div class="links-row">
         <a href="https://www.swen-app.com" class="link-item" target="_blank">
-          <i class="icon website-icon"></i> Swen 官方网站
+          <i class="icon website-icon"></i> {{ t('settings.about.website') }}
+        </a>
+        <!-- <div class="divider"></div>
+        <a href="https://www.swen-app.com" class="link-item" target="_blank">
+          <i class="icon qq-icon"></i> {{ t('settings.about.qqGroup') }}
+        </a> -->
+        <div class="divider"></div>
+        <a href="https://www.swen-app.com/doc" class="link-item" target="_blank">
+          <i class="icon terms-icon"></i> {{ t('settings.about.termsOfUse') }}
         </a>
         <div class="divider"></div>
-        <a href="https://www.swen-app.com" class="link-item" target="_blank">
-          <i class="icon qq-icon"></i> QQ 交流群
+        <a href="https://www.swen-app.com/privacy" class="link-item" target="_blank">
+          <i class="icon privacy-icon"></i> {{ t('settings.about.privacyPolicy') }}
         </a>
       </div>
       
-      <div class="links-row">
+      <!-- <div class="links-row">
         <a href="https://www.swen-app.com" class="link-item" target="_blank">
-          <i class="icon privacy-icon"></i> 隐私政策
+          <i class="icon privacy-icon"></i> {{ t('settings.about.privacyPolicy') }}
         </a>
         <div class="divider"></div>
         <a href="https://www.swen-app.com" class="link-item" target="_blank">
-          <i class="icon terms-icon"></i> 使用条款
+          <i class="icon terms-icon"></i> {{ t('settings.about.termsOfUse') }}
         </a>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
 
 <script>
 import { reactive, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
 import tauriConfig from '../../../src-tauri/tauri.conf.json';
 
 export default {
   setup() {
+    const { t } = useI18n();
+    
     const state = reactive({
       version: tauriConfig.version
     });
     
     return {
-      ...toRefs(state)
+      ...toRefs(state),
+      t
     };
   }
 };
@@ -118,7 +130,6 @@ export default {
   align-items: center;
   color: #333;
   text-decoration: none;
-  padding: 0.5rem 1rem;
 }
 
 .link-item:hover {
