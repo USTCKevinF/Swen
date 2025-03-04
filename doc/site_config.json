@@ -1,5 +1,5 @@
 {
-    "site_name": "Swen使用指南",
+    "site_name": "随问使用指南",
     "site_slogon": "即划即问的AI知识助手",
     "site_root_url": "/",
     "site_domain": "www.swen-app.com",
@@ -7,7 +7,8 @@
     "config_template_dir": "config",
     "route": {
         "docs": {
-            "/doc1/": "docs/doc1"
+            "/doc": "docs/doc",
+            "/privacy": "docs/privacy"
         },
         "pages": {
             "/": "pages/index"

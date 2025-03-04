@@ -1,7 +1,7 @@
 {
-    "locale": "en",
+    "locale": "zh",
     "navbar": {
-        "title": "Swen使用指南",
+        "title": "随问使用指南",
         "logo": {
             "alt": "Swen Logo",
             "url": "/static/images/logo.png"
@@ -9,8 +9,13 @@
         "home_url": "/",
         "items": [
             {
-                "url": "/doc1/",
-                "label": "Doc1",
+                "url": "/doc/",
+                "label": "配置说明",
+                "position": "left"
+            },
+            {
+                "url": "/privacy/",
+                "label": "隐私条款",
                 "position": "left"
             }
         ]
