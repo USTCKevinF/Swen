@@ -1,6 +1,11 @@
 <template>
     <div>
         <el-form label-width="140px" class="settings-form">
+            <div class="api-tutorial-link">
+                <a href="https://www.swen-app.com/doc/API" target="_blank">
+                    {{ t('settings.model.configTutorial') }}
+                </a>
+            </div>
             <el-form-item :label="t('settings.model.baseURL')">
                 <el-input 
                     v-model="baseURL" 
@@ -61,6 +66,7 @@
                     type="primary" 
                     @click="testConnection"
                     :loading="isTesting"
+                    :disabled="isTesting || !canTest"
                     class="mt-2"
                 >
                     {{ t('settings.model.testButton') }}
@@ -79,6 +85,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-ignore 忽略Vue导入错误
 import { ref, computed, onMounted, watch } from 'vue'
 import { useConfig } from '../../composables/useConfig'
 import { fetch } from '@tauri-apps/plugin-http'
@@ -131,6 +138,11 @@ const hasChanges = computed(() => {
            apiKey.value !== originalApiKey.value ||
            model.value !== originalModel.value ||
            maxContextLength.value !== originalMaxContextLength.value
+})
+
+// 添加计算属性检查是否可以进行测试
+const canTest = computed(() => {
+    return !!baseURL.value && !!apiKey.value && !!model.value
 })
 
 const testConnection = async () => {
@@ -243,5 +255,19 @@ watch(allConfigLoaded, (loaded: boolean) => {
 .settings-form :deep(.el-input),
 .settings-form :deep(.el-select) {
     font-size: 14px;
+}
+
+.api-tutorial-link {
+  margin-left: 50px;
+  font-size: 12px;
+}
+
+.api-tutorial-link a {
+  color: var(--el-color-primary);
+  text-decoration: none;
+}
+
+.api-tutorial-link a:hover {
+  text-decoration: underline;
 }
 </style>

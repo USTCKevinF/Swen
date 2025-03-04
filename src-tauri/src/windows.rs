@@ -11,7 +11,7 @@ use serde_json::json;
 use tauri::Listener;
 use tauri::Manager;
 use tauri::Monitor;
-use tauri::Runtime;
+// use tauri::Runtime;
 use tauri::WebviewWindow;
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
@@ -76,8 +76,27 @@ pub fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
     match app_handle.get_webview_window(label) {
         Some(v) => {
             info!("Window existence: {}", label);
+            
+            // 确保窗口在所有工作区可见
+            v.set_visible_on_all_workspaces(true).unwrap();
+            
+            // 将窗口移动到当前鼠标所在的显示器位置
+            // v.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(
+            //     position.x,
+            //     position.y,
+            // ))).unwrap();
+            
+            // 确保窗口在当前桌面上显示
+            #[cfg(target_os = "macos")]
+            {
+                // macOS 特定处理：先隐藏再显示可以强制窗口在当前桌面显示
+                v.hide().unwrap();
+                v.show().unwrap();
+            }
+            
+            // 设置窗口焦点
             v.set_focus().unwrap();
-            v.show().unwrap();
+            
             (v, true)
         }
         None => {
@@ -159,25 +178,25 @@ pub fn home_window() -> (WebviewWindow, bool) {
     (window, exists)
 }
 
-pub fn screenshot_window() -> WebviewWindow {
-    let (window, _exists) = build_window("screenshot", "Screenshot");
+// pub fn screenshot_window() -> WebviewWindow {
+//     let (window, _exists) = build_window("screenshot", "Screenshot");
 
-    window.set_skip_taskbar(true).unwrap();
-    #[cfg(target_os = "macos")]
-    {
-        let monitor = window.current_monitor().unwrap().unwrap();
-        let size = monitor.size();
-        window.set_decorations(false).unwrap();
-        window.set_size(*size).unwrap();
-    }
+//     window.set_skip_taskbar(true).unwrap();
+//     #[cfg(target_os = "macos")]
+//     {
+//         let monitor = window.current_monitor().unwrap().unwrap();
+//         let size = monitor.size();
+//         window.set_decorations(false).unwrap();
+//         window.set_size(*size).unwrap();
+//     }
 
-    #[cfg(not(target_os = "macos"))]
-    window.set_fullscreen(true).unwrap();
+//     #[cfg(not(target_os = "macos"))]
+//     window.set_fullscreen(true).unwrap();
 
-    window.set_focus().unwrap();
-    window.set_always_on_top(true).unwrap();
-    window
-}
+//     window.set_focus().unwrap();
+//     window.set_always_on_top(true).unwrap();
+//     window
+// }
 
 pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
     match event.state() {
@@ -238,66 +257,66 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
     }
 }
 
-// use system screenshot
-pub fn system_screenshot_window() {
-    let app_handle = APP.get().unwrap();
-    if let Err(e) = system_screenshot() {
-        warn!("截图失败: {}", e);
-        return;
-    }
-    // 先创建窗口
-    let (window, exists) = home_window();
+// // use system screenshot
+// pub fn system_screenshot_window() {
+//     let app_handle = APP.get().unwrap();
+//     if let Err(e) = system_screenshot() {
+//         warn!("截图失败: {}", e);
+//         return;
+//     }
+//     // 先创建窗口
+//     let (window, exists) = home_window();
 
-    let app_handle_clone = app_handle.clone();
-    let state: tauri::State<StringWrapper> = app_handle_clone.state();
-    let ocr_result = match system_ocr(app_handle_clone.clone(), "auto") {
-        Ok(result) => {
-            info!("OCR Result: {}", result);
-            result
-        }
-        Err(e) => {
-            warn!("OCR失败: {}", e);
-            return;
-        }
-    };
+//     let app_handle_clone = app_handle.clone();
+//     let state: tauri::State<StringWrapper> = app_handle_clone.state();
+//     let ocr_result = match system_ocr(app_handle_clone.clone(), "auto") {
+//         Ok(result) => {
+//             info!("OCR Result: {}", result);
+//             result
+//         }
+//         Err(e) => {
+//             warn!("OCR失败: {}", e);
+//             return;
+//         }
+//     };
 
-    state.0.lock().unwrap().replace_range(.., &ocr_result);
+//     state.0.lock().unwrap().replace_range(.., &ocr_result);
 
-    // 添加时间戳
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_millis();
+//     // 添加时间戳
+//     let timestamp = std::time::SystemTime::now()
+//         .duration_since(std::time::UNIX_EPOCH)
+//         .unwrap()
+//         .as_millis();
 
-    let ocr_result_clone = ocr_result.clone();
+//     let ocr_result_clone = ocr_result.clone();
 
-    if exists {
-        app_handle
-            .emit_to(
-                "home",
-                "update-input",
-                json!({
-                    "payload": ocr_result,
-                    "requestId": timestamp
-                }),
-            )
-            .unwrap();
-    } else {
-        window.once("home-ready", move |_| {
-            app_handle_clone
-                .emit_to(
-                    "home",
-                    "update-input",
-                    json!({
-                        "payload": ocr_result_clone,
-                        "requestId": timestamp
-                    }),
-                )
-                .unwrap();
-        });
-        window.show().unwrap();
-    }
-}
+//     if exists {
+//         app_handle
+//             .emit_to(
+//                 "home",
+//                 "update-input",
+//                 json!({
+//                     "payload": ocr_result,
+//                     "requestId": timestamp
+//                 }),
+//             )
+//             .unwrap();
+//     } else {
+//         window.once("home-ready", move |_| {
+//             app_handle_clone
+//                 .emit_to(
+//                     "home",
+//                     "update-input",
+//                     json!({
+//                         "payload": ocr_result_clone,
+//                         "requestId": timestamp
+//                     }),
+//                 )
+//                 .unwrap();
+//         });
+//         window.show().unwrap();
+//     }
+// }
 
 // use system screenshot
 pub fn system_screenshot_hotkey(
@@ -312,8 +331,7 @@ pub fn system_screenshot_hotkey(
                 return;
             }
             // 先创建窗口
-            let (window, exists) = home_window();
-
+            
             let app_handle_clone = app_handle.clone();
             let state: tauri::State<StringWrapper> = app_handle_clone.state();
             let ocr_result = match system_ocr(app_handle_clone.clone(), "auto") {
@@ -326,17 +344,21 @@ pub fn system_screenshot_hotkey(
                     return;
                 }
             };
-
+            
             state.0.lock().unwrap().replace_range(.., &ocr_result);
-
+            
             // 添加时间戳
             let timestamp = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_millis();
-
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+        
             let ocr_result_clone = ocr_result.clone();
-
+            if ocr_result=="" {
+                return;
+            }
+        
+            let (window, exists) = home_window();
             if exists {
                 app_handle
                     .emit_to(
@@ -370,49 +392,49 @@ pub fn system_screenshot_hotkey(
     }
 }
 
-use cocoa::appkit::{NSWindow, NSWindowStyleMask, NSWindowTitleVisibility};
+// use cocoa::appkit::{NSWindow, NSWindowStyleMask, NSWindowTitleVisibility};
 
-pub trait WindowExt {
-    #[cfg(target_os = "macos")]
-    fn set_transparent_titlebar(&self, title_transparent: bool, remove_toolbar: bool);
-}
+// pub trait WindowExt {
+//     #[cfg(target_os = "macos")]
+//     fn set_transparent_titlebar(&self, title_transparent: bool, remove_toolbar: bool);
+// }
 
-impl<R: Runtime> WindowExt for WebviewWindow<R> {
-    #[cfg(target_os = "macos")]
-    fn set_transparent_titlebar(&self, title_transparent: bool, remove_tool_bar: bool) {
-        unsafe {
-            let id = self.ns_window().unwrap() as cocoa::base::id;
-            NSWindow::setTitlebarAppearsTransparent_(id, cocoa::base::YES);
-            let mut style_mask = id.styleMask();
-            style_mask.set(
-                NSWindowStyleMask::NSFullSizeContentViewWindowMask,
-                title_transparent,
-            );
+// impl<R: Runtime> WindowExt for WebviewWindow<R> {
+//     #[cfg(target_os = "macos")]
+//     fn set_transparent_titlebar(&self, title_transparent: bool, remove_tool_bar: bool) {
+//         unsafe {
+//             let id = self.ns_window().unwrap() as cocoa::base::id;
+//             NSWindow::setTitlebarAppearsTransparent_(id, cocoa::base::YES);
+//             let mut style_mask = id.styleMask();
+//             style_mask.set(
+//                 NSWindowStyleMask::NSFullSizeContentViewWindowMask,
+//                 title_transparent,
+//             );
 
-            if remove_tool_bar {
-                style_mask.remove(
-                    NSWindowStyleMask::NSClosableWindowMask
-                        | NSWindowStyleMask::NSMiniaturizableWindowMask
-                        | NSWindowStyleMask::NSResizableWindowMask,
-                );
-            }
+//             if remove_tool_bar {
+//                 style_mask.remove(
+//                     NSWindowStyleMask::NSClosableWindowMask
+//                         | NSWindowStyleMask::NSMiniaturizableWindowMask
+//                         | NSWindowStyleMask::NSResizableWindowMask,
+//                 );
+//             }
 
-            id.setStyleMask_(style_mask);
+//             id.setStyleMask_(style_mask);
 
-            id.setTitleVisibility_(if title_transparent {
-                NSWindowTitleVisibility::NSWindowTitleHidden
-            } else {
-                NSWindowTitleVisibility::NSWindowTitleVisible
-            });
+//             id.setTitleVisibility_(if title_transparent {
+//                 NSWindowTitleVisibility::NSWindowTitleHidden
+//             } else {
+//                 NSWindowTitleVisibility::NSWindowTitleVisible
+//             });
 
-            id.setTitlebarAppearsTransparent_(if title_transparent {
-                cocoa::base::YES
-            } else {
-                cocoa::base::NO
-            });
-        }
-    }
-}
+//             id.setTitlebarAppearsTransparent_(if title_transparent {
+//                 cocoa::base::YES
+//             } else {
+//                 cocoa::base::NO
+//             });
+//         }
+//     }
+// }
 
 // use manual screenshot display page
 // pub fn ocr_get() {

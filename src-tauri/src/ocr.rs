@@ -8,6 +8,9 @@ use tauri::Manager;
 pub fn system_ocr(app_handle: tauri::AppHandle, lang: &str) -> Result<String, String> {
     let mut app_cache_dir_path = cache_dir().expect("Get Cache Dir Failed");
     app_cache_dir_path.push(&app_handle.config().identifier.clone());
+    if !app_cache_dir_path.exists() {
+        std::fs::create_dir_all(&app_cache_dir_path).map_err(|e| e.to_string())?;
+    }
     app_cache_dir_path.push("YYSM_Tool_screenshot_cut.png");
     info!("OCR 缓存目录: {:?}", app_cache_dir_path);
     let arch = std::env::consts::ARCH;

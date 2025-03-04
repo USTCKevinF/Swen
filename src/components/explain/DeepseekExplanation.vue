@@ -30,7 +30,7 @@
                   link
                   @click="copyAnswer(item.answer)"
                 >
-                  <img src="../../assets/svg/copydocument.svg" class="w-4 h-4 " />
+                  <img src="/logo/copydocument.svg" class="w-4 h-4 " />
                 </el-button>
               </el-tooltip>
             </div>
@@ -54,7 +54,7 @@
         v-model="newQuestion"
         :placeholder="isLoading ? t('explain.answering') : t('explain.continueAsking')"
         :disabled="isLoading"
-        @keyup.enter="handleSendQuestion"
+        @keydown.enter="handleKeyDown"
       />
     </div>
   </div>
@@ -92,15 +92,15 @@ const isLoading = ref(false);
 const localMessages = ref<Array<{role: string, content: string}>>([]);
 
 // 修改 watch 逻辑，使用正确的滚动容器
-watch(deepseekResponse, () => {
-  nextTick(() => {
-    // 修改选择器，直接选择组件内的滚动容器
-    const scrollContainer = document.querySelector('.option-item > .flex-1');
-    if (scrollContainer) {
-      scrollContainer.scrollTop = scrollContainer.scrollHeight;
-    }
-  });
-});
+// watch(deepseekResponse, () => {
+//   nextTick(() => {
+//     // 修改选择器，直接选择组件内的滚动容器
+//     const scrollContainer = document.querySelector('.option-item > .flex-1');
+//     if (scrollContainer) {
+//       scrollContainer.scrollTop = scrollContainer.scrollHeight;
+//     }
+//   });
+// });
 
 // 监听初始messages变化
 watch(() => props.messages, (newMessages: Array<{role: string, content: string}>) => {
@@ -122,6 +122,16 @@ const { property: baseURL } = useConfig('llm.baseURL', '')
 const { property: apiKey } = useConfig('llm.apiKey', '')
 const { property: model } = useConfig('llm.model', '')
 const { property: maxContextLength } = useConfig('llm.maxContextLength', 6)
+
+function handleKeyDown(event: KeyboardEvent) {
+  // 检查是否处于输入法组合状态
+  if (event.isComposing || event.keyCode === 229) {
+    // 如果是输入法组合状态，不处理这个回车键
+    return;
+  }
+  // 不是输入法组合状态，可以安全发送消息
+  handleSendQuestion();
+}
 
 async function handleSendQuestion() {
   if (!newQuestion.value.trim() || isLoading.value) return;
@@ -244,6 +254,15 @@ const clearState = () => {
   localMessages.value = [];
 };
 
+// 添加取消监听的方法
+const cancelFetchStream = () => {
+  if (fetchStreamUnlisten) {
+    fetchStreamUnlisten();
+    fetchStreamUnlisten = null;
+    isLoading.value = false;
+  }
+};
+
 const saveMultiChatHistory = () => {
   const initialQuestion = localMessages.value[1].content; // 第一个用户问题
   const now = new Date();
@@ -278,7 +297,8 @@ const copyAnswer = async (text: string) => {
 // 暴露方法给父组件
 defineExpose({
   clearState,
-  saveMultiChatHistory
+  saveMultiChatHistory,
+  cancelFetchStream
 });
 
 onUnmounted(() => {

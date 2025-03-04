@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
 import { listen } from '@tauri-apps/api/event';
+// @ts-ignore 忽略Vue导入错误
 import { ref, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { COMPREHENSIVE_EXPLANATION_PROMPT } from '../utils/prompts';
+import { COMPREHENSIVE_EXPLANATION_PROMPT, EXPLANATION_SUMMARY_PROMPT } from '../utils/prompts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
 
@@ -19,6 +20,7 @@ let unlistenInput: any = null;
 let isWindowFullyShown = false;
 const isPinned = ref(false);
 
+
 // 添加ref用于获取DeepseekExplanation组件实例
 const deepseekExplanationRef = ref();
 
@@ -30,6 +32,8 @@ const listenBlur = async () => {
         if (blurTimeout) {
           clearTimeout(blurTimeout);
         }
+        // 取消流事件监听
+        deepseekExplanationRef.value?.cancelFetchStream();
         // 保存多轮对话历史
         deepseekExplanationRef.value?.saveMultiChatHistory();
         // 清空组件状态
@@ -39,7 +43,9 @@ const listenBlur = async () => {
         messages.value = [];
         
         blurTimeout = setTimeout(async () => {
+          // 隐藏窗口
           await currentWindow.hide();
+          // await currentWindow.setVisibleOnAllWorkspaces(false);
         }, 100);
       }
     }
@@ -67,11 +73,19 @@ const listenInputUpdate = async () => {
     if (requestId && requestId > currentRequestId.value) {
       currentRequestId.value = requestId;
       inputText.value = payload.trim();
-      // 更新messages列表
-      messages.value = [
-        { role: "system", content: COMPREHENSIVE_EXPLANATION_PROMPT },
-        { role: "user", content: payload.trim() }
-      ];
+      if (payload.trim().length > 500) {
+        // 更新messages列表
+        messages.value = [
+          { role: "system", content: EXPLANATION_SUMMARY_PROMPT },
+          { role: "user", content: payload.trim() }
+        ];
+      } else {
+        // 更新messages列表
+        messages.value = [
+          { role: "system", content: COMPREHENSIVE_EXPLANATION_PROMPT },
+          { role: "user", content: payload.trim() }
+        ];
+      }
     }
   });
 };
@@ -137,7 +151,7 @@ const handlePinClick = () => {
           </div>
           <div class="cursor-pointer" @click="handlePinClick">
             <img 
-              src= '../assets/svg/pin.svg'
+              src="/logo/pin.svg"
               class="w-6 h-6 opacity-30 hover:opacity-60 transition-opacity duration-200"
               :alt="isPinned ? 'Pinned' : 'Not Pinned'"
               :title="isPinned ? '取消钉住窗口' : '钉住窗口'"
@@ -159,7 +173,6 @@ const handlePinClick = () => {
 
 <style>
 :global(body) {
-  background: transparent;
   height: 100vh;
   overflow: hidden;
 }

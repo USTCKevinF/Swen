@@ -20,9 +20,9 @@ export default {
     },
     model: {
       title: 'Model Settings',
-      baseURL: 'Base URL',
-      apiKey: 'API Key',
-      modelName: 'Model Name',
+      baseURL: 'Base URL（Required）',
+      apiKey: 'API Key（Required）',
+      modelName: 'Model Name（Required）',
       testConnection: 'Test Connection',
       testInput: 'What LLM are you?',
       testButton: 'Test Connection',
@@ -32,7 +32,9 @@ export default {
       cancel: 'Cancel',
       saveSuccess: 'Settings Saved',
       cancelChanges: 'Changes Cancelled',
-      maxContextLength: 'Max Context Length'
+      maxContextLength: 'Max Context Length',
+      notConfigured: 'Not Configured',
+      configTutorial: 'View API Configuration Tutorial'
     },
     history: {
       title: 'History',
@@ -50,7 +52,12 @@ export default {
       loadFailed: 'Failed to load history records'
     },
     about: {
-      title: 'About'
+      name: 'Swen',
+      title: 'About',
+      website: 'Official Website',
+      qqGroup: 'QQ Group',
+      privacyPolicy: 'Privacy Policy',
+      termsOfUse: 'Terms of Use'
     },
     funding: {
       title: 'Buy Me a Coffee',

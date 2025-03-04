@@ -1,9 +1,9 @@
-import { onMounted, onUnmounted } from 'vue'
+// @ts-ignore 忽略Vue导入错误
+import { onMounted, onUnmounted, ref } from 'vue'
 import { emit, listen } from '@tauri-apps/api/event'
 import { store } from '../utils/store'
 import { useGetState } from './useGetState'
 import { debounce } from '../utils/debounce'
-import { ref } from 'vue'
 
 export function useConfig(key: string, defaultValue: any, options = { sync: true }) {
   const [property, setPropertyState, getProperty] = useGetState(null)
@@ -14,6 +14,10 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
   const syncToStore = debounce(async (value: any) => {
     try {
       console.log('syncToStore:', store)
+      if (!store) {
+        console.error('Store is not initialized')
+        return
+      }
       await store.set(key, value)
       await store.save()
       // 发送事件通知其他组件
@@ -32,6 +36,12 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
       isLoaded.value = true
     } else {
       try {
+        if (!store) {
+          console.error('Store is not initialized')
+          setPropertyState(defaultValue)
+          isLoaded.value = true
+          return
+        }
         const storeValue = await store.get(key)
         if (storeValue === null || storeValue === undefined) {
           console.log('storeValue is null', defaultValue)
@@ -83,6 +93,10 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
 // 删除配置项
 export const deleteKey = async (key: string) => {
   try {
+    if (!store) {
+      console.error('Store is not initialized')
+      return
+    }
     const hasKey = await store.has(key)
     if (hasKey) {
       await store.delete(key)
