@@ -1,0 +1,44 @@
+{
+    "locale": "zh",
+    "navbar": {
+        "title": "随问使用指南",
+        "logo": {
+            "alt": "Swen Logo",
+            "url": "/static/images/logo.png"
+        },
+        "home_url": "/",
+        "items": [
+            {
+                "url": "/doc/",
+                "label": "配置说明",
+                "position": "left"
+            },
+            {
+                "url": "/privacy/",
+                "label": "隐私条款",
+                "position": "left"
+            }
+        ]
+    },
+    "footer":{
+        "top":[
+            {
+                "label": "",
+                "items": [
+                    {
+                        "label": "",
+                        "url": "#",
+                        "target": "_blank"
+                    }
+                ]
+            }
+        ],
+        "bottom": [
+            {
+                "label": "Copyright © 2025 Wenjun Feng",
+                "url": "https://www.swen-app.com",
+                "target": "_blank"
+            }
+        ]
+    }
+}
