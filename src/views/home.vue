@@ -73,7 +73,20 @@ const listenInputUpdate = async () => {
     if (requestId && requestId > currentRequestId.value) {
       currentRequestId.value = requestId;
       inputText.value = payload.trim();
-      if (payload.trim().length > 500) {
+      // 定义检查文本长度的函数
+      function countWordsAndCharacters(text: string) {
+        // 提取所有英文单词
+        const englishWords = text.match(/[a-zA-Z]+/g) || [];
+        
+        // 提取所有中文字符
+        const chineseChars = text.match(/[\u4e00-\u9fa5]/g) || [];
+        
+        // 英文单词数 + 中文字符数作为总"词"数
+        return englishWords.length + chineseChars.length;
+      }
+      let wordCount = countWordsAndCharacters(payload.trim());
+      console.log('wordCount', wordCount);
+      if (wordCount > 800) {
         // 更新messages列表
         messages.value = [
           { role: "system", content: EXPLANATION_SUMMARY_PROMPT },
