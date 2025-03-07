@@ -9,8 +9,17 @@ date: 2025-03-05
 ## 安装
 随问的官方app可以从[随问官方网站](https://swen-app.com)下载
 
-打开下载完成的安装包会显示如下的图片,将左侧的图标拖入右边的Application文件夹即可。
-![安装说明](/static/images/Install.png)
+打开下载完成的安装包可能会显示如下的图片，这是因为随问是在浏览器而不是App Store中下载，需要您在设置中为随问赋予相应的信任权限
+![安装说明1](/static/images/swen_dmg_installed1.png)
+点击完成之后打开设置，找到隐私与安全性，在隐私与安全性的页面下方找到如图所示的位置点击仍要打开。
+![安装说明2](/static/images/swen_dmg_installed2.png)
+之后再次打开下载的dmg文件进行安装。拖动随问的图标到右侧文件夹图标中完成安装。
+![安装说明2](/static/images/Install.png)
+然后请在访达的应用程序中找到随问，点击打开，可能会出现下面的提示：
+![安装说明2](/static/images/swen_installed1.png)
+点击完成之后再次打开设置，找到隐私与安全性，在隐私与安全性的页面下方找到如图所示的位置点击仍要打开。
+![安装说明2](/static/images/swen_installed2.png)
+之后就可以顺利打开随问了。
 ## 特性
 随问与其他应用程序有所不同，它是一个菜单栏软件，启动之后你可以在菜单栏里面找到它的图标
 ![菜单栏图标](/static/images/Tray.png)
