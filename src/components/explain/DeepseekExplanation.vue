@@ -6,9 +6,12 @@
         <!-- 对话历史 -->
         <template v-for="(item, index) in chatHistory" :key="index">
           <!-- 用户问题 -->
-          <div class="text-[13px] pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden">
+          <div class="text-[13px] pl-3 bg-gray-100 rounded-lg h-10 flex items-center text-gray-500 overflow-hidden hover:cursor-pointer relative group" @click="copyQuestion(item.question)">
             <div class="overflow-hidden text-ellipsis whitespace-nowrap">
               {{"Q: " + item.question }}
+            </div>
+            <div class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 px-2 py-0.5 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+              {{ t('explain.copyQuestion') }}
             </div>
           </div>
           <!-- AI回答 -->
@@ -65,6 +68,7 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
+import 'katex/dist/katex.min.css';
 import { useConfig } from '../../composables/useConfig'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core';
@@ -285,6 +289,16 @@ const saveMultiChatHistory = () => {
 }
 
 const copyAnswer = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    ElMessage.success(t('explain.copySuccess'));
+  } catch (err) {
+    console.error('复制失败:', err);
+    ElMessage.error(t('explain.copyFailed'));
+  }
+};
+
+const copyQuestion = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text);
     ElMessage.success(t('explain.copySuccess'));

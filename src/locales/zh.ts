@@ -75,6 +75,7 @@ export default {
     answering: '正在回答中..',
     continueAsking: '继续提问',
     copySuccess: '复制成功',
-    copyFailed: '复制失败'
+    copyFailed: '复制失败',
+    copyQuestion: '点击复制'
   }
 } 
