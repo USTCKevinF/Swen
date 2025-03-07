@@ -80,3 +80,34 @@ pub fn register_shortcut_by_frontend(name: &str, shortcut: &str) -> Result<(), S
     }
     Ok(())
 }
+
+// 初始化快捷键设置，如果为空则设置默认值
+pub fn init_hotkey_config() {
+    // 初始化选择文本快捷键
+    match get("hotkey_selection_get") {
+        Some(v) => {
+            if v.as_str().map_or(true, |s| s.is_empty()) {
+                info!("初始化选择文本快捷键为 Option+E");
+                set("hotkey_selection_get", "Option+E");
+            }
+        },
+        None => {
+            info!("设置选择文本快捷键默认值为 Option+E");
+            set("hotkey_selection_get", "Option+E");
+        }
+    }
+    
+    // 初始化截屏快捷键
+    match get("hotkey_ocr") {
+        Some(v) => {
+            if v.as_str().map_or(true, |s| s.is_empty()) {
+                info!("初始化截屏快捷键为 Option+W");
+                set("hotkey_ocr", "Option+W");
+            }
+        },
+        None => {
+            info!("设置截屏快捷键默认值为 Option+W");
+            set("hotkey_ocr", "Option+W");
+        }
+    }
+}
