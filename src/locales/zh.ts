@@ -25,7 +25,7 @@ export default {
       apiKey: 'API 密钥（必填）',
       modelName: '模型名称（必填）',
       testConnection: '测试模型连通',
-      testInput: '你是什么模型？',
+      testInput: '你好啊！',
       testButton: '测试连接',
       connectionSuccess: '连接成功',
       connectionFailed: '连接失败',
