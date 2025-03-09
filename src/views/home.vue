@@ -86,7 +86,7 @@ const listenInputUpdate = async () => {
       }
       let wordCount = countWordsAndCharacters(payload.trim());
       console.log('wordCount', wordCount);
-      if (wordCount > 800) {
+      if (wordCount > 600) {
         // 更新messages列表
         messages.value = [
           { role: "system", content: EXPLANATION_SUMMARY_PROMPT },
