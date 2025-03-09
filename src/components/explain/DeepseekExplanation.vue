@@ -58,6 +58,7 @@
         :placeholder="isLoading ? t('explain.answering') : t('explain.continueAsking')"
         :disabled="isLoading"
         @keydown.enter="handleKeyDown"
+        autofocus="true"
       />
     </div>
   </div>
