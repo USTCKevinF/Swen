@@ -84,8 +84,14 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "category": "Utility",
     "macOS": {
-      "signingIdentity": "Developer ID Application: Wenjun Feng (B6BFDS7FVC)"
+      "signingIdentity": "Apple Distribution: Wenjun Feng (B6BFDS7FVC)",
+      "entitlements": "./Entitlements.plist",
+      "minimumSystemVersion": "12.0",
+      "files": {
+        "embedded.provisionprofile": "/Users/fengwenjun/private_keys/Swen_provisioning_profile.provisionprofile"
+      }
     }
   }
 }

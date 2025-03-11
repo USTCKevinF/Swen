@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    yysm_tool_lib::run()
+    swen_lib::run()
 }

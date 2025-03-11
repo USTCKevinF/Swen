@@ -1,0 +1,11 @@
+{
+    "bundle": {
+     "category": "Utility",
+      "macOS": {
+        "entitlements": "./Entitlements.plist",
+        "files": {
+          "embedded.provisionprofile": "/Users/fengwenjun/private_keys/Swen_provisioning_profile.provisionprofile"
+        }
+      }
+    }
+  }
