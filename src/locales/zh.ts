@@ -13,10 +13,11 @@ export default {
     },
     shortcut: {
       title: '快捷键设置',
-      selectionShortcut: '选中唤起窗口快捷键',
-      screenshotShortcut: '截图唤起窗口快捷键',
+      selectionShortcut: '选中唤起快捷键',
+      screenshotShortcut: '截图唤起快捷键',
+      callSwenShortcut: '自定义输入唤起快捷键',
       save: '保存',
-      clickToInput: '点击输入快捷键'
+      clickToInput: '点击输入快捷键',
     },
     model: {
       title: '大模型设置',
@@ -24,7 +25,7 @@ export default {
       apiKey: 'API 密钥（必填）',
       modelName: '模型名称（必填）',
       testConnection: '测试模型连通',
-      testInput: '你是什么模型？',
+      testInput: '你好啊！',
       testButton: '测试连接',
       connectionSuccess: '连接成功',
       connectionFailed: '连接失败',
@@ -73,8 +74,9 @@ export default {
   explain: {
     copyAnswer: '复制回答',
     answering: '正在回答中..',
-    continueAsking: '继续提问',
+    continueAsking: '进行提问',
     copySuccess: '复制成功',
-    copyFailed: '复制失败'
+    copyFailed: '复制失败',
+    copyQuestion: '点击复制'
   }
 } 

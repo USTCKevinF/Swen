@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Swen",
+  "productName": "随问",
   "version": "1.0.0",
-  "identifier": "com.swen.app",
+  "identifier": "com.swen-app.swen",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:3000",
@@ -74,6 +74,7 @@
   
   "bundle": {
     "active": true,
+    "copyright": "Copyright © 2025 Wenjun Feng",
     "targets": "all",
     "resources": ["resources/*"],
     "icon": [
@@ -82,6 +83,15 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "category": "Utility",
+    "macOS": {
+      "signingIdentity": "Apple Distribution: Wenjun Feng (B6BFDS7FVC)",
+      "entitlements": "./Entitlements.plist",
+      "minimumSystemVersion": "12.0",
+      "files": {
+        "embedded.provisionprofile": "/Users/fengwenjun/private_keys/Swen_provisioning_profile.provisionprofile"
+      }
+    }
   }
 }

@@ -54,21 +54,33 @@ pub fn is_first_run() -> bool {
     let store = state.0.lock().unwrap();
     println!("store: {:?}", store.is_empty());
     if store.is_empty() {
+        return true;
+    }
+    
+    let api_key = store.get("llm.apiKey");
+    let base_url = store.get("llm.baseURL");
+    let model = store.get("llm.model");
+    
+    println!("api_key: {:?}", api_key);
+    println!("base_url: {:?}", base_url);
+    println!("model: {:?}", model);
+    
+    if api_key.is_none() || base_url.is_none() || model.is_none() {
+        return true;
+    }
+    
+    let api_key = api_key.unwrap();
+    let base_url = base_url.unwrap();
+    let model = model.unwrap();
+    
+    if api_key.is_null() || base_url.is_null() || model.is_null() || 
+       api_key.as_str().map_or(true, |s| s.is_empty()) ||
+       base_url.as_str().map_or(true, |s| s.is_empty()) ||
+       model.as_str().map_or(true, |s| s.is_empty())
+    {
         true
     } else {
-        let api_key = store.get("llm.apiKey").unwrap();
-        let base_url = store.get("llm.baseURL").unwrap();
-        let model = store.get("llm.model").unwrap();
-        println!("api_key: {:?}", api_key);
-        println!("base_url: {:?}", base_url);
-        println!("model: {:?}", model);
-        if api_key.is_null() || base_url.is_null() || model.is_null() || api_key == ""
-            || base_url == ""
-            || model == ""
-        {
-            true
-        } else {
-            false
-        }
+        false
     }
 }
+

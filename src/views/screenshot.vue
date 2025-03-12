@@ -55,7 +55,7 @@ const initScreenshot = async () => {
     const position = monitor.position
     
     const appCacheDirPath = await appCacheDir()
-    const filePath = await join(appCacheDirPath, 'YYSM_Tool_screenshot.png')
+    const filePath = await join(appCacheDirPath, 'Swen_screenshot.png')
     const assetUrl = convertFileSrc(filePath)
     
     // 使用新的Image对象预加载

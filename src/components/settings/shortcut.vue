@@ -46,6 +46,29 @@
           </template>
         </el-input>
       </div>
+
+      <div class="bg-white p-2">
+        <div class="flex items-center gap-2 mb-4">
+          <el-icon class="text-lg text-primary"><Crop /></el-icon>
+          <h3 class="m-0 text-[15px] font-medium text-gray-800">{{ t('settings.shortcut.callSwenShortcut') }}</h3>
+        </div>
+        <el-input
+          v-model="callSwen"
+          :placeholder="t('settings.shortcut.clickToInput')"
+          @keydown="(e) => keyDown(e, setCallSwen)"
+          @focus="() => handleFocus(callSwen, setCallSwen)"
+        >
+          <template #append>
+            <el-button
+              type="primary"
+              v-if="callSwen"
+              @click="registerHandler(' ', callSwen)"
+            >
+              {{ t('settings.shortcut.save') }}
+            </el-button>
+          </template>
+        </el-input>
+      </div>
     </div>
   </div>
 </template>
@@ -96,7 +119,7 @@ const keyMap = {
 
 const { property: selectionTranslate, setProperty: setSelectionTranslate } = useConfig('hotkey_selection_get', 'Option+E')
 const { property: ocr, setProperty: setOcr } = useConfig('hotkey_ocr', 'Option+W')
-
+const { property: callSwen, setProperty: setCallSwen } = useConfig('hotkey_call_swen', 'Option+Q')
 const keyDown = (e, setKey) => {
   e.preventDefault()
   if (e.keyCode === 8) {

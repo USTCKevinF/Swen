@@ -9,7 +9,7 @@ pub fn screenshot() -> Result<(), String> {
     let handle = APP.get().unwrap();
     let mut app_cache_dir_path = cache_dir().expect("获取缓存目录失败");
     app_cache_dir_path.push(&handle.config().identifier.clone());
-    let screenshot_path = app_cache_dir_path.join("YYSM_Tool_screenshot.png");
+    let screenshot_path = app_cache_dir_path.join("Swen_screenshot.png");
 
     // 确保目录存在
     if !app_cache_dir_path.exists() {
@@ -76,7 +76,7 @@ pub fn system_screenshot() -> Result<(), String> {
     let app_handle = APP.get().unwrap();
     let cache_dir = cache_dir().expect("无法获取缓存目录");
     let app_cache_dir = cache_dir.join(&app_handle.config().identifier);
-    let screenshot_path = app_cache_dir.join("YYSM_Tool_screenshot_cut.png");
+    let screenshot_path = app_cache_dir.join("Swen_screenshot.png");
     // 删除旧截图文件（如果存在）
     let _ = std::fs::remove_file(&screenshot_path);
     std::process::Command::new("screencapture")

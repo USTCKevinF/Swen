@@ -7,7 +7,7 @@ mod screenshot;
 mod tray;
 mod windows;
 
-use hotkey::init_register_shortcut;
+use hotkey::{init_register_shortcut, init_hotkey_config};
 use log::info;
 use once_cell::sync::OnceCell;
 use windows::config_window;
@@ -44,6 +44,8 @@ pub fn run() {
             APP.get_or_init(|| app.handle().clone());
 
             config::init_config(app);
+            // 初始化快捷键配置
+            init_hotkey_config();
             // Register Global Shortcut
             match init_register_shortcut("all") {
                 Ok(()) => {}

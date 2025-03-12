@@ -3,6 +3,38 @@
 version = 4
 
 [[package]]
+name = "Swen"
+version = "1.0.0"
+dependencies = [
+ "arboard",
+ "clipboard-win",
+ "cocoa 0.26.0",
+ "dirs",
+ "futures-util",
+ "get-selected-text",
+ "image",
+ "log",
+ "macos-accessibility-client",
+ "mouse_position",
+ "once_cell",
+ "screenshots",
+ "selection",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-http",
+ "tauri-plugin-log",
+ "tauri-plugin-opener",
+ "tauri-plugin-sql",
+ "tauri-plugin-store",
+ "window-shadows",
+]
+
+[[package]]
 name = "accessibility-ng"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7747,38 +7779,6 @@ dependencies = [
  "quote",
  "syn 2.0.95",
  "synstructure",
-]
-
-[[package]]
-name = "yysm_tool"
-version = "0.1.0"
-dependencies = [
- "arboard",
- "clipboard-win",
- "cocoa 0.26.0",
- "dirs",
- "futures-util",
- "get-selected-text",
- "image",
- "log",
- "macos-accessibility-client",
- "mouse_position",
- "once_cell",
- "screenshots",
- "selection",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-http",
- "tauri-plugin-log",
- "tauri-plugin-opener",
- "tauri-plugin-sql",
- "tauri-plugin-store",
- "window-shadows",
 ]
 
 [[package]]

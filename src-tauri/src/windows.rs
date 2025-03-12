@@ -392,6 +392,18 @@ pub fn system_screenshot_hotkey(
     }
 }
 
+// use system screenshot
+pub fn call_swen(
+    _app_handle: &AppHandle,
+    _shortcut: &Shortcut,
+    _event: ShortcutEvent,
+) {
+    let (window, exists) = home_window();
+    if exists {
+        window.show().unwrap();
+    }
+}
+
 // use cocoa::appkit::{NSWindow, NSWindowStyleMask, NSWindowTitleVisibility};
 
 // pub trait WindowExt {

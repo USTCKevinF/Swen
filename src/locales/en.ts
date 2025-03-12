@@ -75,6 +75,8 @@ export default {
     answering: 'Answering...',
     continueAsking: 'Continue Asking',
     copySuccess: 'Copied Successfully',
-    copyFailed: 'Copy Failed'
+    copyFailed: 'Copy Failed',
+    copyQuestion: 'Click to Copy',
+    callSwenShortcut: 'Call Swen Shortcut'
   }
 } 
