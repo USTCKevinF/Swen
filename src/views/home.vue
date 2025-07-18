@@ -17,8 +17,11 @@ const currentWindow = getCurrentWindow();
 let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 let unlisten: any = null;
 let unlistenInput: any = null;
+let unlistenFocus: any = null;
+let unlistenMove: any = null;
 let isWindowFullyShown = false;
 const isPinned = ref(false);
+const isWindowHiding = ref(false);
 
 
 // 添加ref用于获取DeepseekExplanation组件实例
@@ -28,10 +31,16 @@ const deepseekExplanationRef = ref();
 const listenBlur = async () => {
   unlisten = await listen('tauri://blur', () => {
     if (currentWindow.label === 'home') {
-      if (isWindowFullyShown && !isPinned.value) {
+      if (isWindowFullyShown && !isPinned.value && !isWindowHiding.value) {
+        // 清理已存在的超时
         if (blurTimeout) {
           clearTimeout(blurTimeout);
+          blurTimeout = null;
         }
+        
+        // 设置窗口隐藏状态
+        isWindowHiding.value = true;
+        
         // 取消流事件监听
         deepseekExplanationRef.value?.cancelFetchStream();
         // 保存多轮对话历史
@@ -43,9 +52,15 @@ const listenBlur = async () => {
         messages.value = [];
         
         blurTimeout = setTimeout(async () => {
-          // 隐藏窗口
-          await currentWindow.hide();
-          // await currentWindow.setVisibleOnAllWorkspaces(false);
+          try {
+            // 隐藏窗口
+            await currentWindow.hide();
+          } catch (error) {
+            console.error('Failed to hide window:', error);
+          } finally {
+            isWindowHiding.value = false;
+            blurTimeout = null;
+          }
         }, 100);
       }
     }
@@ -103,23 +118,28 @@ const listenInputUpdate = async () => {
   });
 };
 
+// 取消隐藏窗口的公共函数
+const cancelHideWindow = () => {
+  if (blurTimeout) {
+    clearTimeout(blurTimeout);
+    blurTimeout = null;
+  }
+  isWindowHiding.value = false;
+};
+
 onMounted(async () => {
   try {
     await listenInputUpdate();
     await listenBlur();
     
     // 监听获得焦点事件，取消关闭计时
-    await listen('tauri://focus', () => {
-      if (blurTimeout) {
-        clearTimeout(blurTimeout);
-      }
+    unlistenFocus = await listen('tauri://focus', () => {
+      cancelHideWindow();
     });
     
     // 监听移动事件，取消关闭计时
-    await listen('tauri://move', () => {
-      if (blurTimeout) {
-        clearTimeout(blurTimeout);
-      }
+    unlistenMove = await listen('tauri://move', () => {
+      cancelHideWindow();
     });
     
     isWindowFullyShown = true;
@@ -132,23 +152,45 @@ onMounted(async () => {
     console.log('home-ready');
     
   } catch (err) {
-    console.error(err)
+    console.error('Failed to initialize window listeners:', err);
   }
 });
 
 // 清理事件监听
 onUnmounted(() => {
+  // 清理所有超时
+  if (blurTimeout) {
+    clearTimeout(blurTimeout);
+    blurTimeout = null;
+  }
+  
+  // 清理所有事件监听器
   if (unlisten) {
     unlisten();
   }
   if (unlistenInput) {
     unlistenInput();
   }
+  if (unlistenFocus) {
+    unlistenFocus();
+  }
+  if (unlistenMove) {
+    unlistenMove();
+  }
 });
 
 // 处理pin点击事件
 const handlePinClick = () => {
   isPinned.value = !isPinned.value;
+  // 如果取消钉住且窗口失去焦点，则立即隐藏窗口
+  if (!isPinned.value && !document.hasFocus()) {
+    cancelHideWindow();
+    setTimeout(() => {
+      if (!document.hasFocus()) {
+        currentWindow.hide();
+      }
+    }, 50);
+  }
 };
 </script>
 
