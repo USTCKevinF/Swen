@@ -1,6 +1,6 @@
-// use crate::config::get;
+// use crate::config::get_config_value;
 // use crate::config::set;
-use crate::config::get;
+use crate::config::get_config_value;
 use crate::ocr::system_ocr;
 use crate::screenshot::system_screenshot;
 use crate::StringWrapper;
@@ -145,11 +145,11 @@ pub fn home_window() -> (WebviewWindow, bool) {
         .unwrap();
     window.set_focus().unwrap();
 
-    let remember_window_size = get("rememberSize").unwrap();
+    let remember_window_size = get_config_value("rememberSize").unwrap();
     if remember_window_size == false {
         window.set_size(tauri::LogicalSize::new(500, 400)).unwrap();
     }
-    let binding = get("windowPosition").unwrap();
+    let binding = get_config_value("windowPosition").unwrap();
     let window_position = binding.as_str().unwrap();
     if window_position == "center" {
         window.center().unwrap();

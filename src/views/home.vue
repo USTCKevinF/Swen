@@ -7,6 +7,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { COMPREHENSIVE_EXPLANATION_PROMPT, EXPLANATION_SUMMARY_PROMPT } from '../utils/prompts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
+import { calculateTextComplexity } from '../utils/textAnalysis';
 
 const isFavorite = ref(false);
 
@@ -28,7 +29,7 @@ const isWindowHiding = ref(false);
 const deepseekExplanationRef = ref();
 
 // 监听失去焦点事件
-const listenBlur = async () => {
+const setupWindowBlurListener = async () => {
   unlisten = await listen('tauri://blur', () => {
     if (currentWindow.label === 'home') {
       if (isWindowFullyShown && !isPinned.value && !isWindowHiding.value) {
@@ -84,18 +85,7 @@ const listenInputUpdate = async () => {
     if (requestId && requestId > currentRequestId.value) {
       currentRequestId.value = requestId;
       inputText.value = payload.trim();
-      // 定义检查文本长度的函数
-      function countWordsAndCharacters(text: string) {
-        // 提取所有英文单词
-        const englishWords = text.match(/[a-zA-Z]+/g) || [];
-        
-        // 提取所有中文字符
-        const chineseChars = text.match(/[\u4e00-\u9fa5]/g) || [];
-        
-        // 英文单词数 + 中文字符数作为总"词"数
-        return englishWords.length + chineseChars.length;
-      }
-      let wordCount = countWordsAndCharacters(payload.trim());
+      let wordCount = calculateTextComplexity(payload.trim());
       console.log('wordCount', wordCount);
       if (wordCount > 600) {
         // 更新messages列表
@@ -126,7 +116,7 @@ const cancelHideWindow = () => {
 onMounted(async () => {
   try {
     await listenInputUpdate();
-    await listenBlur();
+    await setupWindowBlurListener();
     
     // 监听获得焦点事件，取消关闭计时
     unlistenFocus = await listen('tauri://focus', () => {

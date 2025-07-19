@@ -1,4 +1,4 @@
-use crate::config::{get, set};
+use crate::config::{get_config_value, set_config_value};
 use crate::windows::{selection_get, system_screenshot_hotkey, call_swen};
 use crate::APP;
 use log::{info, warn};
@@ -16,10 +16,10 @@ where
 {
     let hotkey = {
         if key.is_empty() {
-            match get(name) {
+            match get_config_value(name) {
                 Some(v) => v.as_str().unwrap().to_string(),
                 None => {
-                    set(name, "");
+                    set_config_value(name, "");
                     String::new()
                 }
             }
@@ -88,43 +88,43 @@ pub fn register_shortcut_by_frontend(name: &str, shortcut: &str) -> Result<(), S
 // 初始化快捷键设置，如果为空则设置默认值
 pub fn init_hotkey_config() {
     // 初始化选择文本快捷键
-    match get("hotkey_selection_get") {
+    match get_config_value("hotkey_selection_get") {
         Some(v) => {
             if v.as_str().map_or(true, |s: &str| s.is_empty()) {
                 info!("初始化选择文本快捷键为 Option+E");
-                set("hotkey_selection_get", "Option+E");
+                set_config_value("hotkey_selection_get", "Option+E");
             }
         },
         None => {
             info!("设置选择文本快捷键默认值为 Option+E");
-            set("hotkey_selection_get", "Option+E");
+            set_config_value("hotkey_selection_get", "Option+E");
         }
     }
     
     // 初始化截屏快捷键
-    match get("hotkey_ocr") {
+    match get_config_value("hotkey_ocr") {
         Some(v) => {
             if v.as_str().map_or(true, |s| s.is_empty()) {
                 info!("初始化截屏快捷键为 Option+W");
-                set("hotkey_ocr", "Option+W");
+                set_config_value("hotkey_ocr", "Option+W");
             }
         },
         None => {
             info!("设置截屏快捷键默认值为 Option+W");
-            set("hotkey_ocr", "Option+W");
+            set_config_value("hotkey_ocr", "Option+W");
         }
     }
 
-    match get("hotkey_call_swen") {
+    match get_config_value("hotkey_call_swen") {
         Some(v) => {
             if v.as_str().map_or(true, |s| s.is_empty()) {
                 info!("初始化调用随问快捷键为 Option+Q");
-                set("hotkey_call_swen", "Option+Q");
+                set_config_value("hotkey_call_swen", "Option+Q");
             }
         },
         None => {
             info!("设置调用随问快捷键默认值为 Option+Q");
-            set("hotkey_call_swen", "Option+Q");
+            set_config_value("hotkey_call_swen", "Option+Q");
         }
     }
     

@@ -33,7 +33,7 @@ pub fn get_config_path(app: &mut tauri::App) -> PathBuf {
     return config_path;
 }
 
-pub fn get(key: &str) -> Option<Value> {
+pub fn get_config_value(key: &str) -> Option<Value> {
     let state = APP.get().unwrap().state::<StoreWrapper>();
     let store = state.0.lock().unwrap();
     match store.get(key) {
@@ -42,7 +42,7 @@ pub fn get(key: &str) -> Option<Value> {
     }
 }
 
-pub fn set<T: serde::ser::Serialize>(key: &str, value: T) {
+pub fn set_config_value<T: serde::ser::Serialize>(key: &str, value: T) {
     let state = APP.get().unwrap().state::<StoreWrapper>();
     let store = state.0.lock().unwrap();
     store.set(key.to_string(), json!(value));
