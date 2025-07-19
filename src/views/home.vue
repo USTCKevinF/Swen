@@ -41,27 +41,23 @@ const listenBlur = async () => {
         // 设置窗口隐藏状态
         isWindowHiding.value = true;
         
-        // 取消流事件监听
-        deepseekExplanationRef.value?.cancelFetchStream();
-        // 保存多轮对话历史
-        deepseekExplanationRef.value?.saveMultiChatHistory();
-        // 清空组件状态
-        deepseekExplanationRef.value?.clearState();
-        // 清空输入文本和消息
-        inputText.value = "";
-        messages.value = [];
-        
-        blurTimeout = setTimeout(async () => {
+        // 立即隐藏窗口，然后清理内容
+        (async () => {
           try {
-            // 隐藏窗口
             await currentWindow.hide();
+            
+            // 窗口隐藏后再清理内容
+            deepseekExplanationRef.value?.cancelFetchStream();
+            deepseekExplanationRef.value?.saveMultiChatHistory();
+            deepseekExplanationRef.value?.clearState();
+            inputText.value = "";
+            messages.value = [];
           } catch (error) {
             console.error('Failed to hide window:', error);
           } finally {
             isWindowHiding.value = false;
-            blurTimeout = null;
           }
-        }, 100);
+        })();
       }
     }
   });
@@ -185,11 +181,7 @@ const handlePinClick = () => {
   // 如果取消钉住且窗口失去焦点，则立即隐藏窗口
   if (!isPinned.value && !document.hasFocus()) {
     cancelHideWindow();
-    setTimeout(() => {
-      if (!document.hasFocus()) {
-        currentWindow.hide();
-      }
-    }, 50);
+    currentWindow.hide();
   }
 };
 </script>
