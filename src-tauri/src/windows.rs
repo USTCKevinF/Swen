@@ -129,7 +129,7 @@ pub fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
     }
 }
 
-pub fn config_window() {
+pub fn open_settings_window() {
     let (window, _exists) = build_window("settings", "Settings");
     window
         .set_min_size(Some(tauri::LogicalSize::new(800, 600)))
@@ -138,7 +138,7 @@ pub fn config_window() {
     window.center().unwrap();
 }
 
-pub fn home_window() -> (WebviewWindow, bool) {
+pub fn open_main_window() -> (WebviewWindow, bool) {
     let (window, exists) = build_window("home", "Home");
     window
         .set_min_size(Some(tauri::LogicalSize::new(400, 300)))
@@ -179,7 +179,7 @@ pub fn home_window() -> (WebviewWindow, bool) {
 }
 
 
-pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
+pub fn handle_text_selection_shortcut(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
     match event.state() {
         ShortcutState::Pressed => {
             use get_selected_text::get_selected_text;
@@ -190,7 +190,7 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
                         state.0.lock().unwrap().replace_range(.., &text);
                         info!("Selected text: {}", text);
 
-                        let (window, exists) = home_window();
+                        let (window, exists) = open_main_window();
                         let timestamp = std::time::SystemTime::now()
                             .duration_since(std::time::UNIX_EPOCH)
                             .unwrap()
@@ -239,7 +239,7 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
 }
 
 // use system screenshot
-pub fn system_screenshot_hotkey(
+pub fn handle_screenshot_ocr_shortcut(
     app_handle: &AppHandle,
     _shortcut: &Shortcut,
     event: ShortcutEvent,
@@ -278,7 +278,7 @@ pub fn system_screenshot_hotkey(
                 return;
             }
         
-            let (window, exists) = home_window();
+            let (window, exists) = open_main_window();
             if exists {
                 app_handle
                     .emit_to(
@@ -313,14 +313,14 @@ pub fn system_screenshot_hotkey(
 }
 
 // use system screenshot
-pub fn call_swen(
+pub fn handle_app_activation_shortcut(
     _app_handle: &AppHandle,
     _shortcut: &Shortcut,
     event: ShortcutEvent,
 ) {
     match event.state() {
         ShortcutState::Pressed => {
-            let (window, exists) = home_window();
+            let (window, exists) = open_main_window();
             if exists {
                 window.show().unwrap();
             }

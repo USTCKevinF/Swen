@@ -4,7 +4,7 @@ use tauri::{
     AppHandle,
 };
 
-use crate::windows::config_window;
+use crate::windows::open_settings_window;
 // use crate::windows::home_window;
 // use crate::windows::system_screenshot_window;
 
@@ -27,7 +27,7 @@ pub fn init_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             // }
             "config" => {
                 println!("Config menu item clicked");
-                config_window();
+                open_settings_window();
             }
             // "ocr" => {
             //     println!("OCR menu item clicked");

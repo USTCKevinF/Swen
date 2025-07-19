@@ -7,10 +7,10 @@ mod screenshot;
 mod tray;
 mod windows;
 
-use hotkey::{init_register_shortcut, init_hotkey_config};
+use hotkey::{initialize_shortcut_handler, initialize_default_shortcuts};
 use log::info;
 use once_cell::sync::OnceCell;
-use windows::config_window;
+use windows::open_settings_window;
 use config::is_first_run;
 use std::sync::Mutex;
 use tauri::Manager;
@@ -45,9 +45,9 @@ pub fn run() {
 
             config::init_config(app);
             // 初始化快捷键配置
-            init_hotkey_config();
+            initialize_default_shortcuts();
             // Register Global Shortcut
-            match init_register_shortcut("all") {
+            match initialize_shortcut_handler("all") {
                 Ok(()) => {}
                 Err(e) => info!("Failed to register global shortcut: {}", e),
             }
@@ -55,13 +55,13 @@ pub fn run() {
             if is_first_run() {
                 // Open Config Window
                 info!("First Run, opening config window");
-                config_window();
+                open_settings_window();
             }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             config::reload_store,
-            hotkey::register_shortcut_by_frontend,
+            hotkey::update_shortcut_from_frontend,
             llm::receive_stream,
             screenshot::screenshot,
             screenshot::cut_image,

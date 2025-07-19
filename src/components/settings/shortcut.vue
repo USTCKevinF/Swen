@@ -16,7 +16,7 @@
             <el-button
               type="primary"
               v-if="selectionTranslate"
-              @click="registerHandler('hotkey_selection_get', selectionTranslate)"
+              @click="registerHandler('shortcut_text_selection', selectionTranslate)"
             >
               {{ t('settings.shortcut.save') }}
             </el-button>
@@ -39,7 +39,7 @@
             <el-button
               type="primary"
               v-if="ocr"
-              @click="registerHandler('hotkey_ocr', ocr)"
+              @click="registerHandler('shortcut_screenshot_ocr', ocr)"
             >
               {{ t('settings.shortcut.save') }}
             </el-button>
@@ -62,7 +62,7 @@
             <el-button
               type="primary"
               v-if="callSwen"
-              @click="registerHandler(' ', callSwen)"
+              @click="registerHandler('shortcut_app_activation', callSwen)"
             >
               {{ t('settings.shortcut.save') }}
             </el-button>
@@ -117,9 +117,9 @@ const keyMap = {
   Suspend: 'Suspend'
 }
 
-const { property: selectionTranslate, setProperty: setSelectionTranslate } = useConfig('hotkey_selection_get', 'Option+E')
-const { property: ocr, setProperty: setOcr } = useConfig('hotkey_ocr', 'Option+W')
-const { property: callSwen, setProperty: setCallSwen } = useConfig('hotkey_call_swen', 'Option+Q')
+const { property: selectionTranslate, setProperty: setSelectionTranslate } = useConfig('shortcut_text_selection', 'Option+E')
+const { property: ocr, setProperty: setOcr } = useConfig('shortcut_screenshot_ocr', 'Option+W')
+const { property: callSwen, setProperty: setCallSwen } = useConfig('shortcut_app_activation', 'Option+Q')
 const keyDown = (e, setKey) => {
   e.preventDefault()
   if (e.keyCode === 8) {
@@ -179,7 +179,7 @@ const registerHandler = async (name, key) => {
       return
     }
 
-    await invoke('register_shortcut_by_frontend', {
+    await invoke('update_shortcut_from_frontend', {
       name,
       shortcut: key
     })
