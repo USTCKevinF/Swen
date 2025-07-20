@@ -1,9 +1,10 @@
-// @ts-ignore 忽略Vue导入错误
+// @ts-ignore - Vue import compatibility
 import { onMounted, onUnmounted, ref } from 'vue'
 import { emit, listen } from '@tauri-apps/api/event'
 import { store } from '../utils/store'
 import { useGetState } from './useGetState'
 import { debounce } from '../utils/debounce'
+import { logger } from '../utils/logger'
 
 export function useConfig(key: string, defaultValue: any, options = { sync: true }) {
   const [property, setPropertyState, getProperty] = useGetState(null)
@@ -13,9 +14,8 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
   // 同步到 Store (State -> Store)
   const syncToStore = debounce(async (value: any) => {
     try {
-      console.log('syncToStore:', store)
       if (!store) {
-        console.error('Store is not initialized')
+        logger.error('Store is not initialized');
         return
       }
       await store.set(key, value)
@@ -23,38 +23,39 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
       // 发送事件通知其他组件
       const eventKey = key.replaceAll('.', '_').replaceAll('@', ':')
       await emit(`${eventKey}_changed`, value)
+      logger.debug('Synced to store', { key, value });
     } catch (err) {
-      console.error('Failed to sync to store:', err)
+      logger.error('Failed to sync to store', err);
     }
   }, 300)
 
   // 同步到 State (Store -> State) 
   const syncToState = async (value: any) => {
-    console.log('syncToState:', value)
     if (value !== null) {
       setPropertyState(value)
       isLoaded.value = true
+      logger.debug('Synced state from external value', { key, value });
     } else {
       try {
         if (!store) {
-          console.error('Store is not initialized')
+          logger.error('Store is not initialized');
           setPropertyState(defaultValue)
           isLoaded.value = true
           return
         }
         const storeValue = await store.get(key)
         if (storeValue === null || storeValue === undefined) {
-          console.log('storeValue is null', defaultValue)
+          logger.debug('Using default value for key', { key, defaultValue });
           setPropertyState(defaultValue)
           await store.set(key, defaultValue)
           await store.save()
         } else {
-          console.log('storeValue is not null', storeValue)
+          logger.debug('Loaded value from store', { key, storeValue });
           setPropertyState(storeValue)
         }
         isLoaded.value = true
       } catch (err) {
-        console.error('Failed to sync from store:', err)
+        logger.error('Failed to sync from store', err);
       }
     }
   }
@@ -94,7 +95,7 @@ export function useConfig(key: string, defaultValue: any, options = { sync: true
 export const deleteKey = async (key: string) => {
   try {
     if (!store) {
-      console.error('Store is not initialized')
+      logger.error('Store is not initialized');
       return
     }
     const hasKey = await store.has(key)
@@ -103,7 +104,7 @@ export const deleteKey = async (key: string) => {
       await store.save()
     }
   } catch (err) {
-    console.error('Failed to delete key:', err)
+    logger.error('Failed to delete key', err);
   }
 }
 

@@ -1,4 +1,4 @@
-// @ts-ignore 忽略Vue导入错误
+// @ts-ignore - Vue import compatibility
 import { ref } from 'vue'
 
 export function useGetState(initialValue: any) {

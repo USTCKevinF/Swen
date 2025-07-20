@@ -1,28 +1,35 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
 import { listen } from '@tauri-apps/api/event';
-// @ts-ignore 忽略Vue导入错误
+// @ts-ignore - Vue import compatibility
 import { ref, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { COMPREHENSIVE_EXPLANATION_PROMPT, EXPLANATION_SUMMARY_PROMPT } from '../utils/prompts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
 import { calculateTextComplexity } from '../utils/textAnalysis';
+import { logger } from '../utils/logger';
+
+// Improved state management with better typing
+interface ChatMessage {
+  role: string;
+  content: string;
+}
 
 const isFavorite = ref(false);
-
 const inputText = ref("");
-const messages = ref<Array<{role: string, content: string}>>([]);
+const messages = ref<ChatMessage[]>([]);
 const currentRequestId = ref(0);
+const isPinned = ref(false);
+const isWindowHiding = ref(false);
+let isWindowFullyShown = false;
+
 const currentWindow = getCurrentWindow();
 let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 let unlisten: any = null;
 let unlistenInput: any = null;
 let unlistenFocus: any = null;
 let unlistenMove: any = null;
-let isWindowFullyShown = false;
-const isPinned = ref(false);
-const isWindowHiding = ref(false);
 
 
 // 添加ref用于获取DeepseekExplanation组件实例
@@ -54,7 +61,7 @@ const setupWindowBlurListener = async () => {
             inputText.value = "";
             messages.value = [];
           } catch (error) {
-            console.error('Failed to hide window:', error);
+            logger.error('Failed to hide window', error);
           } finally {
             isWindowHiding.value = false;
           }
@@ -86,7 +93,7 @@ const listenInputUpdate = async () => {
       currentRequestId.value = requestId;
       inputText.value = payload.trim();
       let wordCount = calculateTextComplexity(payload.trim());
-      console.log('wordCount', wordCount);
+      logger.debug('Text complexity calculated', { wordCount, text: payload.trim().substring(0, 50) + '...' });
       if (wordCount > 600) {
         // 更新messages列表
         messages.value = [
@@ -135,10 +142,10 @@ onMounted(async () => {
     // 添加初始化完成事件
     const appWindow = await getCurrentWebviewWindow();
     await appWindow.emit("home-ready");
-    console.log('home-ready');
+    logger.debug('Home component ready');
     
   } catch (err) {
-    console.error('Failed to initialize window listeners:', err);
+    logger.error('Failed to initialize window listeners', err);
   }
 });
 

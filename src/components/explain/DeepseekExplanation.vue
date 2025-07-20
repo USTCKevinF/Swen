@@ -76,6 +76,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { saveChatHistory } from '../../utils/database';
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
+import { logger } from '../../utils/logger';
 
 const { t } = useI18n();
 
@@ -96,16 +97,7 @@ const deepseekResponse = ref("");
 const isLoading = ref(false);
 const localMessages = ref<Array<{role: string, content: string}>>([]);
 
-// 修改 watch 逻辑，使用正确的滚动容器
-// watch(deepseekResponse, () => {
-//   nextTick(() => {
-//     // 修改选择器，直接选择组件内的滚动容器
-//     const scrollContainer = document.querySelector('.option-item > .flex-1');
-//     if (scrollContainer) {
-//       scrollContainer.scrollTop = scrollContainer.scrollHeight;
-//     }
-//   });
-// });
+// Dead code removed - scroll container watch logic
 
 // 监听初始messages变化
 watch(() => props.messages, (newMessages: Array<{role: string, content: string}>) => {
@@ -179,7 +171,7 @@ async function getDeepseekExplanation(payload: string) {
           if (!msg.trim()) return;
           try {
             if (msg.includes('[DONE]')) {
-              console.log('DONE');
+              // Stream completed
               isLoading.value = false;
               
               // 更新最后一条对话的答案
@@ -205,7 +197,7 @@ async function getDeepseekExplanation(payload: string) {
               deepseekResponse.value += content;
             }
           } catch (e) {
-            console.error('解析消息失败:', e, msg);
+            logger.error('Failed to parse message', { error: e, message: msg });
           }
         });
       }
@@ -224,7 +216,7 @@ async function getDeepseekExplanation(payload: string) {
       contextMessages = localMessages.value;
     }
 
-    console.log('contextMessages:', contextMessages, localMessages.value)
+    logger.debug('Context messages prepared', { contextCount: contextMessages.length, totalMessages: localMessages.value.length });
     await invoke('receive_stream', {
       url: `${baseURL.value}/chat/completions`,
       authToken: `Bearer ${apiKey.value}`,
@@ -235,7 +227,7 @@ async function getDeepseekExplanation(payload: string) {
       }),
     });
   } catch (error) {
-    console.error('流处理错误:', error);
+    logger.error('Stream processing error', error);
     deepseekResponse.value = "抱歉，解释生成失败，请稍后重试。";
     isLoading.value = false;
     if (fetchStreamUnlisten) {
@@ -294,7 +286,7 @@ const copyAnswer = async (text: string) => {
     await navigator.clipboard.writeText(text);
     ElMessage.success(t('explain.copySuccess'));
   } catch (err) {
-    console.error('复制失败:', err);
+    logger.error('Copy failed', err);
     ElMessage.error(t('explain.copyFailed'));
   }
 };
@@ -304,7 +296,7 @@ const copyQuestion = async (text: string) => {
     await navigator.clipboard.writeText(text);
     ElMessage.success(t('explain.copySuccess'));
   } catch (err) {
-    console.error('复制失败:', err);
+    logger.error('Copy failed', err);
     ElMessage.error(t('explain.copyFailed'));
   }
 };
