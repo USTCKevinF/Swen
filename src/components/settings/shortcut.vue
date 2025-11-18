@@ -9,14 +9,14 @@
         <el-input
           v-model="selectionTranslate"
           :placeholder="t('settings.shortcut.clickToInput')"
-          @keydown="(e) => keyDown(e, setSelectionTranslate)"
+          @keydown="(e: KeyboardEvent) => keyDown(e, setSelectionTranslate)"
           @focus="() => handleFocus(selectionTranslate, setSelectionTranslate)"
         >
           <template #append>
             <el-button
               type="primary"
               v-if="selectionTranslate"
-              @click="registerHandler('hotkey_selection_get', selectionTranslate)"
+              @click="registerHandler('shortcut_text_selection', selectionTranslate)"
             >
               {{ t('settings.shortcut.save') }}
             </el-button>
@@ -32,14 +32,14 @@
         <el-input
           v-model="ocr"
           :placeholder="t('settings.shortcut.clickToInput')"
-          @keydown="(e) => keyDown(e, setOcr)"
+          @keydown="(e: KeyboardEvent) => keyDown(e, setOcr)"
           @focus="() => handleFocus(ocr, setOcr)"
         >
           <template #append>
             <el-button
               type="primary"
               v-if="ocr"
-              @click="registerHandler('hotkey_ocr', ocr)"
+              @click="registerHandler('shortcut_screenshot_ocr', ocr)"
             >
               {{ t('settings.shortcut.save') }}
             </el-button>
@@ -55,14 +55,14 @@
         <el-input
           v-model="callSwen"
           :placeholder="t('settings.shortcut.clickToInput')"
-          @keydown="(e) => keyDown(e, setCallSwen)"
+          @keydown="(e: KeyboardEvent) => keyDown(e, setCallSwen)"
           @focus="() => handleFocus(callSwen, setCallSwen)"
         >
           <template #append>
             <el-button
               type="primary"
               v-if="callSwen"
-              @click="registerHandler(' ', callSwen)"
+              @click="registerHandler('shortcut_app_activation', callSwen)"
             >
               {{ t('settings.shortcut.save') }}
             </el-button>
@@ -73,16 +73,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useConfig } from '../../composables/useConfig'
 import { unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut'
 import { ElMessage } from 'element-plus'
 import { invoke } from '@tauri-apps/api/core'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { Pointer, Crop } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { Pointer, Crop } = ElementPlusIconsVue
 
 const keyMap = {
   Backquote: '`',
@@ -117,10 +116,10 @@ const keyMap = {
   Suspend: 'Suspend'
 }
 
-const { property: selectionTranslate, setProperty: setSelectionTranslate } = useConfig('hotkey_selection_get', 'Option+E')
-const { property: ocr, setProperty: setOcr } = useConfig('hotkey_ocr', 'Option+W')
-const { property: callSwen, setProperty: setCallSwen } = useConfig('hotkey_call_swen', 'Option+Q')
-const keyDown = (e, setKey) => {
+const { property: selectionTranslate, setProperty: setSelectionTranslate } = useConfig('shortcut_text_selection', 'Option+E')
+const { property: ocr, setProperty: setOcr } = useConfig('shortcut_screenshot_ocr', 'Option+W')
+const { property: callSwen, setProperty: setCallSwen } = useConfig('shortcut_app_activation', 'Option+Q')
+const keyDown = (e: KeyboardEvent, setKey: (value: string) => void) => {
   e.preventDefault()
   if (e.keyCode === 8) {
     setKey('')
@@ -154,8 +153,8 @@ const keyDown = (e, setKey) => {
     code = code.substring(4)
   } else if (/F\d+/.test(code)) {
     // 保持F键不变
-  } else if (keyMap[code] !== undefined) {
-    code = keyMap[code]
+  } else if (keyMap[code as keyof typeof keyMap] !== undefined) {
+    code = keyMap[code as keyof typeof keyMap]
   } else {
     code = ''
   }
@@ -163,29 +162,29 @@ const keyDown = (e, setKey) => {
   setKey(`${newValue}${newValue.length > 0 && code.length > 0 ? '+' : ''}${code}`)
 }
 
-const handleFocus = async (currentKey, setKey) => {
+const handleFocus = async (currentKey: string, setKey: (value: string) => void) => {
   if (currentKey) {
     await unregister(currentKey)
     setKey('')
   }
 }
 
-const registerHandler = async (name, key) => {
+const registerHandler = async (name: string, key: string) => {
   try {
-    console.log('registerHandler', name, key)
+    // Registration attempt for shortcut
     const registered = await isRegistered(key)
     if (registered) {
       ElMessage.error('该快捷键已被注册')
       return
     }
 
-    await invoke('register_shortcut_by_frontend', {
+    await invoke('update_shortcut_from_frontend', {
       name,
       shortcut: key
     })
     ElMessage.success('快捷键注册成功')
   } catch (error) {
-    ElMessage.error(error.toString())
+    ElMessage.error(String(error))
   }
 }
 </script>

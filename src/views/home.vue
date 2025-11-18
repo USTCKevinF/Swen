@@ -1,52 +1,71 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
 import { listen } from '@tauri-apps/api/event';
-// @ts-ignore 忽略Vue导入错误
+// @ts-ignore - Vue import compatibility
 import { ref, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { COMPREHENSIVE_EXPLANATION_PROMPT, EXPLANATION_SUMMARY_PROMPT } from '../utils/prompts';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import DeepseekExplanation from '../components/explain/DeepseekExplanation.vue';
+import { calculateTextComplexity } from '../utils/textAnalysis';
+import { logger } from '../utils/logger';
+
+// Improved state management with better typing
+interface ChatMessage {
+  role: string;
+  content: string;
+}
 
 const isFavorite = ref(false);
-
 const inputText = ref("");
-const messages = ref<Array<{role: string, content: string}>>([]);
+const messages = ref<ChatMessage[]>([]);
 const currentRequestId = ref(0);
+const isPinned = ref(false);
+const isWindowHiding = ref(false);
+let isWindowFullyShown = false;
+
 const currentWindow = getCurrentWindow();
 let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 let unlisten: any = null;
 let unlistenInput: any = null;
-let isWindowFullyShown = false;
-const isPinned = ref(false);
+let unlistenFocus: any = null;
+let unlistenMove: any = null;
 
 
 // 添加ref用于获取DeepseekExplanation组件实例
 const deepseekExplanationRef = ref();
 
 // 监听失去焦点事件
-const listenBlur = async () => {
+const setupWindowBlurListener = async () => {
   unlisten = await listen('tauri://blur', () => {
     if (currentWindow.label === 'home') {
-      if (isWindowFullyShown && !isPinned.value) {
+      if (isWindowFullyShown && !isPinned.value && !isWindowHiding.value) {
+        // 清理已存在的超时
         if (blurTimeout) {
           clearTimeout(blurTimeout);
+          blurTimeout = null;
         }
-        // 取消流事件监听
-        deepseekExplanationRef.value?.cancelFetchStream();
-        // 保存多轮对话历史
-        deepseekExplanationRef.value?.saveMultiChatHistory();
-        // 清空组件状态
-        deepseekExplanationRef.value?.clearState();
-        // 清空输入文本和消息
-        inputText.value = "";
-        messages.value = [];
         
-        blurTimeout = setTimeout(async () => {
-          // 隐藏窗口
-          await currentWindow.hide();
-          // await currentWindow.setVisibleOnAllWorkspaces(false);
-        }, 100);
+        // 设置窗口隐藏状态
+        isWindowHiding.value = true;
+        
+        // 立即隐藏窗口，然后清理内容
+        (async () => {
+          try {
+            await currentWindow.hide();
+            
+            // 窗口隐藏后再清理内容
+            deepseekExplanationRef.value?.cancelFetchStream();
+            deepseekExplanationRef.value?.saveMultiChatHistory();
+            deepseekExplanationRef.value?.clearState();
+            inputText.value = "";
+            messages.value = [];
+          } catch (error) {
+            logger.error('Failed to hide window', error);
+          } finally {
+            isWindowHiding.value = false;
+          }
+        })();
       }
     }
   });
@@ -73,19 +92,8 @@ const listenInputUpdate = async () => {
     if (requestId && requestId > currentRequestId.value) {
       currentRequestId.value = requestId;
       inputText.value = payload.trim();
-      // 定义检查文本长度的函数
-      function countWordsAndCharacters(text: string) {
-        // 提取所有英文单词
-        const englishWords = text.match(/[a-zA-Z]+/g) || [];
-        
-        // 提取所有中文字符
-        const chineseChars = text.match(/[\u4e00-\u9fa5]/g) || [];
-        
-        // 英文单词数 + 中文字符数作为总"词"数
-        return englishWords.length + chineseChars.length;
-      }
-      let wordCount = countWordsAndCharacters(payload.trim());
-      console.log('wordCount', wordCount);
+      let wordCount = calculateTextComplexity(payload.trim());
+      logger.debug('Text complexity calculated', { wordCount, text: payload.trim().substring(0, 50) + '...' });
       if (wordCount > 600) {
         // 更新messages列表
         messages.value = [
@@ -103,23 +111,28 @@ const listenInputUpdate = async () => {
   });
 };
 
+// 取消隐藏窗口的公共函数
+const cancelHideWindow = () => {
+  if (blurTimeout) {
+    clearTimeout(blurTimeout);
+    blurTimeout = null;
+  }
+  isWindowHiding.value = false;
+};
+
 onMounted(async () => {
   try {
     await listenInputUpdate();
-    await listenBlur();
+    await setupWindowBlurListener();
     
     // 监听获得焦点事件，取消关闭计时
-    await listen('tauri://focus', () => {
-      if (blurTimeout) {
-        clearTimeout(blurTimeout);
-      }
+    unlistenFocus = await listen('tauri://focus', () => {
+      cancelHideWindow();
     });
     
     // 监听移动事件，取消关闭计时
-    await listen('tauri://move', () => {
-      if (blurTimeout) {
-        clearTimeout(blurTimeout);
-      }
+    unlistenMove = await listen('tauri://move', () => {
+      cancelHideWindow();
     });
     
     isWindowFullyShown = true;
@@ -129,26 +142,44 @@ onMounted(async () => {
     // 添加初始化完成事件
     const appWindow = await getCurrentWebviewWindow();
     await appWindow.emit("home-ready");
-    console.log('home-ready');
+    logger.debug('Home component ready');
     
   } catch (err) {
-    console.error(err)
+    logger.error('Failed to initialize window listeners', err);
   }
 });
 
 // 清理事件监听
 onUnmounted(() => {
+  // 清理所有超时
+  if (blurTimeout) {
+    clearTimeout(blurTimeout);
+    blurTimeout = null;
+  }
+  
+  // 清理所有事件监听器
   if (unlisten) {
     unlisten();
   }
   if (unlistenInput) {
     unlistenInput();
   }
+  if (unlistenFocus) {
+    unlistenFocus();
+  }
+  if (unlistenMove) {
+    unlistenMove();
+  }
 });
 
 // 处理pin点击事件
 const handlePinClick = () => {
   isPinned.value = !isPinned.value;
+  // 如果取消钉住且窗口失去焦点，则立即隐藏窗口
+  if (!isPinned.value && !document.hasFocus()) {
+    cancelHideWindow();
+    currentWindow.hide();
+  }
 };
 </script>
 

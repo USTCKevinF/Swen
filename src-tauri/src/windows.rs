@@ -1,6 +1,6 @@
-// use crate::config::get;
+// use crate::config::get_config_value;
 // use crate::config::set;
-use crate::config::get;
+use crate::config::get_config_value;
 use crate::ocr::system_ocr;
 use crate::screenshot::system_screenshot;
 use crate::StringWrapper;
@@ -129,7 +129,7 @@ pub fn build_window(label: &str, title: &str) -> (WebviewWindow, bool) {
     }
 }
 
-pub fn config_window() {
+pub fn open_settings_window() {
     let (window, _exists) = build_window("settings", "Settings");
     window
         .set_min_size(Some(tauri::LogicalSize::new(800, 600)))
@@ -138,18 +138,18 @@ pub fn config_window() {
     window.center().unwrap();
 }
 
-pub fn home_window() -> (WebviewWindow, bool) {
+pub fn open_main_window() -> (WebviewWindow, bool) {
     let (window, exists) = build_window("home", "Home");
     window
         .set_min_size(Some(tauri::LogicalSize::new(400, 300)))
         .unwrap();
     window.set_focus().unwrap();
 
-    let remember_window_size = get("rememberSize").unwrap();
+    let remember_window_size = get_config_value("rememberSize").unwrap();
     if remember_window_size == false {
         window.set_size(tauri::LogicalSize::new(500, 400)).unwrap();
     }
-    let binding = get("windowPosition").unwrap();
+    let binding = get_config_value("windowPosition").unwrap();
     let window_position = binding.as_str().unwrap();
     if window_position == "center" {
         window.center().unwrap();
@@ -178,27 +178,8 @@ pub fn home_window() -> (WebviewWindow, bool) {
     (window, exists)
 }
 
-// pub fn screenshot_window() -> WebviewWindow {
-//     let (window, _exists) = build_window("screenshot", "Screenshot");
 
-//     window.set_skip_taskbar(true).unwrap();
-//     #[cfg(target_os = "macos")]
-//     {
-//         let monitor = window.current_monitor().unwrap().unwrap();
-//         let size = monitor.size();
-//         window.set_decorations(false).unwrap();
-//         window.set_size(*size).unwrap();
-//     }
-
-//     #[cfg(not(target_os = "macos"))]
-//     window.set_fullscreen(true).unwrap();
-
-//     window.set_focus().unwrap();
-//     window.set_always_on_top(true).unwrap();
-//     window
-// }
-
-pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
+pub fn handle_text_selection_shortcut(app_handle: &AppHandle, _shortcut: &Shortcut, event: ShortcutEvent) {
     match event.state() {
         ShortcutState::Pressed => {
             use get_selected_text::get_selected_text;
@@ -209,7 +190,7 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
                         state.0.lock().unwrap().replace_range(.., &text);
                         info!("Selected text: {}", text);
 
-                        let (window, exists) = home_window();
+                        let (window, exists) = open_main_window();
                         let timestamp = std::time::SystemTime::now()
                             .duration_since(std::time::UNIX_EPOCH)
                             .unwrap()
@@ -257,69 +238,8 @@ pub fn selection_get(app_handle: &AppHandle, _shortcut: &Shortcut, event: Shortc
     }
 }
 
-// // use system screenshot
-// pub fn system_screenshot_window() {
-//     let app_handle = APP.get().unwrap();
-//     if let Err(e) = system_screenshot() {
-//         warn!("截图失败: {}", e);
-//         return;
-//     }
-//     // 先创建窗口
-//     let (window, exists) = home_window();
-
-//     let app_handle_clone = app_handle.clone();
-//     let state: tauri::State<StringWrapper> = app_handle_clone.state();
-//     let ocr_result = match system_ocr(app_handle_clone.clone(), "auto") {
-//         Ok(result) => {
-//             info!("OCR Result: {}", result);
-//             result
-//         }
-//         Err(e) => {
-//             warn!("OCR失败: {}", e);
-//             return;
-//         }
-//     };
-
-//     state.0.lock().unwrap().replace_range(.., &ocr_result);
-
-//     // 添加时间戳
-//     let timestamp = std::time::SystemTime::now()
-//         .duration_since(std::time::UNIX_EPOCH)
-//         .unwrap()
-//         .as_millis();
-
-//     let ocr_result_clone = ocr_result.clone();
-
-//     if exists {
-//         app_handle
-//             .emit_to(
-//                 "home",
-//                 "update-input",
-//                 json!({
-//                     "payload": ocr_result,
-//                     "requestId": timestamp
-//                 }),
-//             )
-//             .unwrap();
-//     } else {
-//         window.once("home-ready", move |_| {
-//             app_handle_clone
-//                 .emit_to(
-//                     "home",
-//                     "update-input",
-//                     json!({
-//                         "payload": ocr_result_clone,
-//                         "requestId": timestamp
-//                     }),
-//                 )
-//                 .unwrap();
-//         });
-//         window.show().unwrap();
-//     }
-// }
-
 // use system screenshot
-pub fn system_screenshot_hotkey(
+pub fn handle_screenshot_ocr_shortcut(
     app_handle: &AppHandle,
     _shortcut: &Shortcut,
     event: ShortcutEvent,
@@ -358,7 +278,7 @@ pub fn system_screenshot_hotkey(
                 return;
             }
         
-            let (window, exists) = home_window();
+            let (window, exists) = open_main_window();
             if exists {
                 app_handle
                     .emit_to(
@@ -393,145 +313,20 @@ pub fn system_screenshot_hotkey(
 }
 
 // use system screenshot
-pub fn call_swen(
+pub fn handle_app_activation_shortcut(
     _app_handle: &AppHandle,
     _shortcut: &Shortcut,
-    _event: ShortcutEvent,
+    event: ShortcutEvent,
 ) {
-    let (window, exists) = home_window();
-    if exists {
-        window.show().unwrap();
+    match event.state() {
+        ShortcutState::Pressed => {
+            let (window, exists) = open_main_window();
+            if exists {
+                window.show().unwrap();
+            }
+        }
+        ShortcutState::Released => {
+            info!("Call swen shortcut released");
+        }
     }
 }
-
-// use cocoa::appkit::{NSWindow, NSWindowStyleMask, NSWindowTitleVisibility};
-
-// pub trait WindowExt {
-//     #[cfg(target_os = "macos")]
-//     fn set_transparent_titlebar(&self, title_transparent: bool, remove_toolbar: bool);
-// }
-
-// impl<R: Runtime> WindowExt for WebviewWindow<R> {
-//     #[cfg(target_os = "macos")]
-//     fn set_transparent_titlebar(&self, title_transparent: bool, remove_tool_bar: bool) {
-//         unsafe {
-//             let id = self.ns_window().unwrap() as cocoa::base::id;
-//             NSWindow::setTitlebarAppearsTransparent_(id, cocoa::base::YES);
-//             let mut style_mask = id.styleMask();
-//             style_mask.set(
-//                 NSWindowStyleMask::NSFullSizeContentViewWindowMask,
-//                 title_transparent,
-//             );
-
-//             if remove_tool_bar {
-//                 style_mask.remove(
-//                     NSWindowStyleMask::NSClosableWindowMask
-//                         | NSWindowStyleMask::NSMiniaturizableWindowMask
-//                         | NSWindowStyleMask::NSResizableWindowMask,
-//                 );
-//             }
-
-//             id.setStyleMask_(style_mask);
-
-//             id.setTitleVisibility_(if title_transparent {
-//                 NSWindowTitleVisibility::NSWindowTitleHidden
-//             } else {
-//                 NSWindowTitleVisibility::NSWindowTitleVisible
-//             });
-
-//             id.setTitlebarAppearsTransparent_(if title_transparent {
-//                 cocoa::base::YES
-//             } else {
-//                 cocoa::base::NO
-//             });
-//         }
-//     }
-// }
-
-// use manual screenshot display page
-// pub fn ocr_get() {
-//     let window = screenshot_window();
-//     let window_ = window.clone();
-//     window.listen("success", move |event| {
-//         let app_handle = APP.get().unwrap();
-//         let cache_dir = cache_dir().expect("无法获取缓存目录");
-//         let app_cache_dir = cache_dir.join(&app_handle.config().identifier);
-
-//         // 确保目录存在
-//         if !app_cache_dir.exists() {
-//             std::fs::create_dir_all(&app_cache_dir).expect("无法创建缓存目录");
-//         }
-
-//         // 检查裁剪后的图片是否存在
-//         let cut_image_path = app_cache_dir.join("YYSM_Tool_screenshot_cut.png");
-//         if !cut_image_path.exists() {
-//             warn!("裁剪后的图片不存在: {:?}", cut_image_path);
-//             return;
-//         }
-
-//         let state: tauri::State<StringWrapper> = app_handle.state();
-
-//         // 添加日志以便调试
-//         info!("开始进行OCR识别，图片路径: {:?}", cut_image_path);
-
-//         let ocr_result = match system_ocr(app_handle.clone(), "auto") {
-//             Ok(result) => result,
-//             Err(e) => {
-//                 warn!("OCR 失败: {}", e);
-//                 return;
-//             }
-//         };
-
-//         info!("OCR Result: {}", ocr_result);
-//         state.0.lock().unwrap().replace_range(.., &ocr_result);
-
-//         app_handle.emit_to("home", "update-input", ocr_result).unwrap();
-//         home_window();
-//         window_.unlisten(event.id())
-//     });
-
-// }
-
-// pub fn ocr_get_hotkey(_app_handle: &AppHandle, _shortcut: &Shortcut, _event: ShortcutEvent) {
-//     let window = screenshot_window();
-//     let window_ = window.clone();
-//     // 克隆 app_handle 以便在闭包中使用
-//     window.listen("success", move |event| {
-//         let app_handle = APP.get().unwrap();
-//         let cache_dir = cache_dir().expect("无法获取缓存目录");
-//         let app_cache_dir = cache_dir.join(&app_handle.config().identifier);
-
-//         // 确保目录存在
-//         if !app_cache_dir.exists() {
-//             std::fs::create_dir_all(&app_cache_dir).expect("无法创建缓存目录");
-//         }
-
-//         // 检查裁剪后的图片是否存在
-//         let cut_image_path = app_cache_dir.join("YYSM_Tool_screenshot_cut.png");
-//         if !cut_image_path.exists() {
-//             warn!("裁剪后的图片不存在: {:?}", cut_image_path);
-//             return;
-//         }
-
-//         let state: tauri::State<StringWrapper> = app_handle.state();
-
-//         // 添加日志以便调试
-//         info!("开始进行OCR识别，图片路径: {:?}", cut_image_path);
-
-//         let ocr_result = match system_ocr(app_handle.clone(), "auto") {
-//             Ok(result) => result,
-//             Err(e) => {
-//                 warn!("OCR 失败: {}", e);
-//                 return;
-//             }
-//         };
-
-//         info!("OCR Result: {}", ocr_result);
-//         state.0.lock().unwrap().replace_range(.., &ocr_result);
-
-//         app_handle.emit_to("home", "update-input", ocr_result).unwrap();
-//         home_window();
-//         window_.unlisten(event.id())
-//     });
-
-// }
